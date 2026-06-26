@@ -12,21 +12,27 @@
 -- Marcus: 11111111-1111-1111-1111-111111111111
 -- Tony:   22222222-2222-2222-2222-222222222222
 
+-- NOTE: the token columns must be '' (not NULL). GoTrue scans them as non-nullable
+-- strings, so a NULL there makes login 500 with "converting NULL to string is unsupported".
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-  created_at, updated_at, raw_app_meta_data, raw_user_meta_data
+  created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
+  confirmation_token, recovery_token, email_change, email_change_token_new,
+  email_change_token_current, phone_change, phone_change_token, reauthentication_token
 )
 values
   ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111',
    'authenticated', 'authenticated', 'marcus@demo.test',
    crypt('password123', gen_salt('bf')), now(), now(), now(),
    '{"provider":"email","providers":["email"]}',
-   '{"full_name":"Marcus Cole","role":"barber","shop_name":"The Sharp Edge"}'),
+   '{"full_name":"Marcus Cole","role":"barber","shop_name":"The Sharp Edge"}',
+   '', '', '', '', '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '22222222-2222-2222-2222-222222222222',
    'authenticated', 'authenticated', 'tony@demo.test',
    crypt('password123', gen_salt('bf')), now(), now(), now(),
    '{"provider":"email","providers":["email"]}',
-   '{"full_name":"Tony Russo","role":"barber","shop_name":"Russo & Sons"}')
+   '{"full_name":"Tony Russo","role":"barber","shop_name":"Russo & Sons"}',
+   '', '', '', '', '', '', '', '')
 on conflict (id) do nothing;
 
 -- Email/password identities (required for login on recent Supabase versions).
