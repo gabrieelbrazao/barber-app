@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Button, Icon, TextField } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
+import { toUserMessage } from '@/lib/errors';
 import { useColors } from '@/hooks/use-colors';
 
 export default function SignInScreen() {
@@ -25,7 +26,7 @@ export default function SignInScreen() {
       await signIn(email.trim(), password);
       // The root guard swaps the navigator to the role's tabs automatically.
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Não foi possível entrar.');
+      setError(toUserMessage(e, 'Não foi possível entrar.'));
     } finally {
       setSubmitting(false);
     }

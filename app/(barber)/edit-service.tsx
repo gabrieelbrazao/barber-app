@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Button, Screen, TextField } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
+import { toUserMessage } from '@/lib/errors';
 import { useSaveService, useServices } from '@/lib/queries';
 import { useColors } from '@/hooks/use-colors';
 
@@ -43,7 +44,7 @@ export default function EditServiceScreen() {
       });
       router.back();
     } catch (e) {
-      Alert.alert('Não foi possível salvar', e instanceof Error ? e.message : 'Tente novamente.');
+      Alert.alert('Não foi possível salvar', toUserMessage(e));
     }
   }
 

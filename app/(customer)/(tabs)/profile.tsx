@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Avatar, Button, Card, Divider, Screen, ScreenHeader, TextField } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
+import { toUserMessage } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 
 export default function CustomerProfileScreen() {
@@ -25,7 +26,7 @@ export default function CustomerProfileScreen() {
       await refreshProfile();
       Alert.alert('Salvo', 'Seu perfil foi atualizado.');
     } catch (e) {
-      Alert.alert('Não foi possível salvar', e instanceof Error ? e.message : 'Tente novamente.');
+      Alert.alert('Não foi possível salvar', toUserMessage(e));
     } finally {
       setSaving(false);
     }

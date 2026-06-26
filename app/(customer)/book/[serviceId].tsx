@@ -16,6 +16,7 @@ import {
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import { generateSlots } from '@/lib/availability';
+import { toUserMessage } from '@/lib/errors';
 import { formatDuration, formatPrice, formatTime } from '@/lib/format';
 import { useBarber, useBookAppointment, useDayAppointments, useServices } from '@/lib/queries';
 
@@ -70,7 +71,7 @@ export default function BookScreen() {
       Alert.alert('Agendado!', 'Sua solicitação de agendamento foi enviada.');
       router.replace('/appointments');
     } catch (e) {
-      Alert.alert('Não foi possível agendar', e instanceof Error ? e.message : 'Tente novamente.');
+      Alert.alert('Não foi possível agendar', toUserMessage(e));
     }
   }
 

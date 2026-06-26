@@ -8,6 +8,7 @@ import { Button, Chip, TextField } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import type { UserRole } from '@/lib/database.types';
+import { toUserMessage } from '@/lib/errors';
 import { useColors } from '@/hooks/use-colors';
 
 export default function SignUpScreen() {
@@ -43,7 +44,7 @@ export default function SignUpScreen() {
       }
       // With auto-confirm on, the session arrives and the root guard routes us in.
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Não foi possível criar a conta.');
+      setError(toUserMessage(e, 'Não foi possível criar a conta.'));
     } finally {
       setSubmitting(false);
     }

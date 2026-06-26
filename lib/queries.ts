@@ -7,6 +7,7 @@ import type {
   Service,
   WorkingHours,
 } from '@/lib/database.types';
+import { AppError } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 
 // ---------------------------------------------------------------------------
@@ -224,7 +225,7 @@ export function useBookAppointment() {
         // 23P01 = exclusion_violation from the appointments_no_overlap constraint:
         // someone took this slot between loading the picker and confirming.
         if (error.code === '23P01') {
-          throw new Error('Esse horário acabou de ser reservado. Escolha outro.');
+          throw new AppError('Esse horário acabou de ser reservado. Escolha outro.');
         }
         throw error;
       }

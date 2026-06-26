@@ -7,6 +7,7 @@ import { Button, Card, Divider, ErrorState, Loading, Screen, ScreenHeader, TextF
 import { Radius, Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import type { WorkingHours } from '@/lib/database.types';
+import { toUserMessage } from '@/lib/errors';
 import { qk, useBarber } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 import { useColors } from '@/hooks/use-colors';
@@ -107,7 +108,7 @@ export default function BarberProfileScreen() {
       qc.invalidateQueries({ queryKey: qk.barbers });
       Alert.alert('Salvo', 'Os dados da sua barbearia foram atualizados.');
     } catch (e) {
-      Alert.alert('Não foi possível salvar', e instanceof Error ? e.message : 'Tente novamente.');
+      Alert.alert('Não foi possível salvar', toUserMessage(e));
     } finally {
       setSaving(false);
     }
