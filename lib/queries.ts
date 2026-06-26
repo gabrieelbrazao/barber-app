@@ -220,10 +220,18 @@ export function useBookAppointment() {
         end_time: input.end.toISOString(),
         status: 'pending',
       });
-      if (error) throw error;
+      if (error) {
+        // 23P01 = exclusion_violation from the appointments_no_overlap constraint:
+        // someone took this slot between loading the picker and confirming.
+        if (error.code === '23P01') {
+          throw new Error('That time was just booked. Please pick another slot.');
+        }
+        throw error;
+      }
     },
     onSuccess: (_d, v) => {
       qc.invalidateQueries({ queryKey: qk.myAppointments(v.customerId) });
+      qc.invalidateQueries({ queryKey: qk.barberAppointments(v.barberId) });
       qc.invalidateQueries({ queryKey: ['appointments', 'day', v.barberId] });
     },
   });

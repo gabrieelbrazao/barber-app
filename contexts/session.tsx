@@ -45,15 +45,23 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
     async function load(nextSession: Session | null) {
       if (!active) return;
-      setSession(nextSession);
       if (nextSession?.user) {
+        // Resolve the profile BEFORE publishing the session. Otherwise there is a
+        // render where session is set but profile is still null, which makes every
+        // role guard in RootNavigator false and drops the user onto the unguarded
+        // /catalog fallback. Setting profile first (and session last) keeps the auth
+        // screen up until the role is known, then both flip together.
+        let p: Profile | null = null;
         try {
-          const p = await fetchProfile(nextSession.user.id);
-          if (active) setProfile(p);
+          p = await fetchProfile(nextSession.user.id);
         } catch {
-          if (active) setProfile(null);
+          p = null;
         }
+        if (!active) return;
+        setProfile(p);
+        setSession(nextSession);
       } else {
+        setSession(null);
         setProfile(null);
       }
       if (active) setLoading(false);

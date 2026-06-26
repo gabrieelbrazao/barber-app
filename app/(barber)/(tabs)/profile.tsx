@@ -21,6 +21,25 @@ const DAYS: { key: keyof WorkingHours; label: string }[] = [
   { key: 'sun', label: 'Sunday' },
 ];
 
+// 24-hour HH:MM. Zero-padded so plain string comparison orders times correctly.
+const HHMM = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+/** Returns the first validation error across open days, or null when all are valid. */
+function validateHours(hours: WorkingHours): string | null {
+  for (const { key, label } of DAYS) {
+    const range = hours[key];
+    if (!range) continue;
+    const [open, close] = range;
+    if (!HHMM.test(open) || !HHMM.test(close)) {
+      return `${label}: enter times as HH:MM (24-hour), e.g. 09:00.`;
+    }
+    if (open >= close) {
+      return `${label}: opening time must be before closing time.`;
+    }
+  }
+  return null;
+}
+
 export default function BarberProfileScreen() {
   const c = useColors();
   const qc = useQueryClient();
@@ -59,6 +78,11 @@ export default function BarberProfileScreen() {
 
   async function onSave() {
     if (!profile) return;
+    const hoursError = validateHours(hours ?? {});
+    if (hoursError) {
+      Alert.alert('Invalid working hours', hoursError);
+      return;
+    }
     setSaving(true);
     try {
       const { error: pErr } = await supabase
