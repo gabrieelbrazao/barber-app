@@ -83,7 +83,7 @@ function RootNavigator() {
         </Stack.Protected>
         {/* Dev-only component gallery — never ship it as a reachable production route. */}
         <Stack.Protected guard={__DEV__}>
-          <Stack.Screen name="catalog" options={{ headerShown: true, title: 'Catalog' }} />
+          <Stack.Screen name="catalog" options={{ headerShown: true, title: 'Catálogo' }} />
         </Stack.Protected>
       </Stack>
       <StatusBar style="auto" />
@@ -96,11 +96,11 @@ function ProfileUnavailable() {
   return (
     <Screen>
       <View style={styles.center}>
-        <ThemedText type="title">Account unavailable</ThemedText>
+        <ThemedText type="title">Conta indisponível</ThemedText>
         <ThemedText muted style={styles.centerText}>
-          We couldn&apos;t load your profile. Check your connection and sign in again.
+          Não foi possível carregar seu perfil. Verifique sua conexão e entre novamente.
         </ThemedText>
-        <Button title="Sign out" onPress={() => signOut()} />
+        <Button title="Sair" onPress={() => signOut()} />
       </View>
     </Screen>
   );

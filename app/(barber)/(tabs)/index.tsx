@@ -27,16 +27,16 @@ export default function BarberScheduleScreen() {
     if (a.status === 'pending') {
       return (
         <>
-          <Button title="Confirm" size="sm" onPress={() => set('confirmed')} />
-          <Button title="Decline" size="sm" variant="ghost" onPress={() => set('cancelled')} />
+          <Button title="Confirmar" size="sm" onPress={() => set('confirmed')} />
+          <Button title="Recusar" size="sm" variant="ghost" onPress={() => set('cancelled')} />
         </>
       );
     }
     if (a.status === 'confirmed') {
       return (
         <>
-          <Button title="Complete" size="sm" variant="secondary" onPress={() => set('completed')} />
-          <Button title="Cancel" size="sm" variant="ghost" onPress={() => set('cancelled')} />
+          <Button title="Concluir" size="sm" variant="secondary" onPress={() => set('completed')} />
+          <Button title="Cancelar" size="sm" variant="ghost" onPress={() => set('cancelled')} />
         </>
       );
     }
@@ -49,7 +49,7 @@ export default function BarberScheduleScreen() {
         data={data ?? []}
         keyExtractor={(a) => a.id}
         contentContainerStyle={styles.content}
-        ListHeaderComponent={<ScreenHeader title="Schedule" subtitle="Your incoming appointments" />}
+        ListHeaderComponent={<ScreenHeader title="Agenda" subtitle="Seus próximos agendamentos" />}
         renderItem={({ item }) => {
           const actions = actionsFor(item);
           return (
@@ -66,12 +66,12 @@ export default function BarberScheduleScreen() {
           isLoading ? (
             <Loading />
           ) : isError ? (
-            <ErrorState message="Couldn't load your schedule." />
+            <ErrorState message="Não foi possível carregar sua agenda." />
           ) : (
             <EmptyState
               icon="calendar-outline"
-              title="No appointments"
-              message="Bookings from clients will show up here."
+              title="Nenhum agendamento"
+              message="Os agendamentos dos clientes aparecerão aqui."
             />
           )
         }

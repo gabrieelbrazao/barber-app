@@ -21,9 +21,9 @@ export default function CustomerAppointmentsScreen() {
   const cancel = useCancelAppointment(profile?.id ?? '');
 
   function onCancel(id: string) {
-    Alert.alert('Cancel appointment?', 'This frees up the time slot.', [
-      { text: 'Keep', style: 'cancel' },
-      { text: 'Cancel it', style: 'destructive', onPress: () => cancel.mutate(id) },
+    Alert.alert('Cancelar agendamento?', 'Isso libera o horário.', [
+      { text: 'Manter', style: 'cancel' },
+      { text: 'Cancelar', style: 'destructive', onPress: () => cancel.mutate(id) },
     ]);
   }
 
@@ -33,7 +33,7 @@ export default function CustomerAppointmentsScreen() {
         data={data ?? []}
         keyExtractor={(a) => a.id}
         contentContainerStyle={styles.content}
-        ListHeaderComponent={<ScreenHeader title="Appointments" />}
+        ListHeaderComponent={<ScreenHeader title="Agendamentos" />}
         renderItem={({ item }) => {
           const upcoming = new Date(item.startTime) > new Date();
           const cancellable = upcoming && (item.status === 'pending' || item.status === 'confirmed');
@@ -45,7 +45,7 @@ export default function CustomerAppointmentsScreen() {
               status={item.status}
               actions={
                 cancellable ? (
-                  <Button title="Cancel" variant="ghost" size="sm" onPress={() => onCancel(item.id)} />
+                  <Button title="Cancelar" variant="ghost" size="sm" onPress={() => onCancel(item.id)} />
                 ) : undefined
               }
             />
@@ -55,10 +55,10 @@ export default function CustomerAppointmentsScreen() {
           isLoading ? (
             <Loading />
           ) : isError ? (
-            <ErrorState message="Couldn't load your appointments." />
+            <ErrorState message="Não foi possível carregar seus agendamentos." />
           ) : (
-            <EmptyState icon="calendar-outline" title="No appointments yet" message="Book your first cut to see it here.">
-              <Button title="Find a barber" onPress={() => router.push('/')} />
+            <EmptyState icon="calendar-outline" title="Nenhum agendamento ainda" message="Agende seu primeiro corte para vê-lo aqui.">
+              <Button title="Encontrar um barbeiro" onPress={() => router.push('/')} />
             </EmptyState>
           )
         }

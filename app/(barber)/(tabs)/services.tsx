@@ -25,9 +25,9 @@ export default function BarberServicesScreen() {
   const del = useDeleteService(barberId);
 
   function onDelete(id: string, name: string) {
-    Alert.alert('Delete service?', `"${name}" will be removed.`, [
-      { text: 'Keep', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => del.mutate(id) },
+    Alert.alert('Excluir serviço?', `"${name}" será removido.`, [
+      { text: 'Manter', style: 'cancel' },
+      { text: 'Excluir', style: 'destructive', onPress: () => del.mutate(id) },
     ]);
   }
 
@@ -39,14 +39,14 @@ export default function BarberServicesScreen() {
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <ScreenHeader
-            title="Services"
-            subtitle="What you offer"
+            title="Serviços"
+            subtitle="O que você oferece"
             right={
               <IconButton
                 name="add-circle"
                 size={28}
                 color={c.accent}
-                accessibilityLabel="Add service"
+                accessibilityLabel="Adicionar serviço"
                 onPress={() => router.push('/edit-service')}
               />
             }
@@ -54,7 +54,7 @@ export default function BarberServicesScreen() {
         }
         renderItem={({ item }) => (
           <ServiceCard
-            name={item.active ? item.name : `${item.name} (hidden)`}
+            name={item.active ? item.name : `${item.name} (oculto)`}
             priceCents={item.price_cents}
             durationMinutes={item.duration_minutes}
             dimmed={!item.active}
@@ -62,7 +62,7 @@ export default function BarberServicesScreen() {
               <View style={styles.actions}>
                 <IconButton
                   name="pencil"
-                  accessibilityLabel={`Edit ${item.name}`}
+                  accessibilityLabel={`Editar ${item.name}`}
                   onPress={() =>
                     router.push({ pathname: '/edit-service', params: { serviceId: item.id } })
                   }
@@ -70,7 +70,7 @@ export default function BarberServicesScreen() {
                 <IconButton
                   name="trash-outline"
                   color={c.cancelled}
-                  accessibilityLabel={`Delete ${item.name}`}
+                  accessibilityLabel={`Excluir ${item.name}`}
                   onPress={() => onDelete(item.id, item.name)}
                 />
               </View>
@@ -81,10 +81,10 @@ export default function BarberServicesScreen() {
           isLoading ? (
             <Loading />
           ) : isError ? (
-            <ErrorState message="Couldn't load your services." />
+            <ErrorState message="Não foi possível carregar seus serviços." />
           ) : (
-            <EmptyState icon="pricetags-outline" title="No services yet" message="Add your first service.">
-              <Button title="Add service" onPress={() => router.push('/edit-service')} />
+            <EmptyState icon="pricetags-outline" title="Nenhum serviço ainda" message="Adicione seu primeiro serviço.">
+              <Button title="Adicionar serviço" onPress={() => router.push('/edit-service')} />
             </EmptyState>
           )
         }

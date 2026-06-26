@@ -12,13 +12,13 @@ import { supabase } from '@/lib/supabase';
 import { useColors } from '@/hooks/use-colors';
 
 const DAYS: { key: keyof WorkingHours; label: string }[] = [
-  { key: 'mon', label: 'Monday' },
-  { key: 'tue', label: 'Tuesday' },
-  { key: 'wed', label: 'Wednesday' },
-  { key: 'thu', label: 'Thursday' },
-  { key: 'fri', label: 'Friday' },
-  { key: 'sat', label: 'Saturday' },
-  { key: 'sun', label: 'Sunday' },
+  { key: 'mon', label: 'Segunda-feira' },
+  { key: 'tue', label: 'Terça-feira' },
+  { key: 'wed', label: 'Quarta-feira' },
+  { key: 'thu', label: 'Quinta-feira' },
+  { key: 'fri', label: 'Sexta-feira' },
+  { key: 'sat', label: 'Sábado' },
+  { key: 'sun', label: 'Domingo' },
 ];
 
 // 24-hour HH:MM. Zero-padded so plain string comparison orders times correctly.
@@ -31,10 +31,10 @@ function validateHours(hours: WorkingHours): string | null {
     if (!range) continue;
     const [open, close] = range;
     if (!HHMM.test(open) || !HHMM.test(close)) {
-      return `${label}: enter times as HH:MM (24-hour), e.g. 09:00.`;
+      return `${label}: informe os horários como HH:MM (24 horas), ex.: 09:00.`;
     }
     if (open >= close) {
-      return `${label}: opening time must be before closing time.`;
+      return `${label}: o horário de abertura deve ser anterior ao de fechamento.`;
     }
   }
   return null;
@@ -62,7 +62,7 @@ export default function BarberProfileScreen() {
   }
 
   if (barberQ.isLoading) return <Screen><Loading /></Screen>;
-  if (barberQ.isError) return <Screen><ErrorState message="Couldn't load your shop." /></Screen>;
+  if (barberQ.isError) return <Screen><ErrorState message="Não foi possível carregar sua barbearia." /></Screen>;
 
   function setDayOpen(key: keyof WorkingHours, open: boolean) {
     setHours((h) => ({ ...h, [key]: open ? ['09:00', '18:00'] : null }));
@@ -80,7 +80,7 @@ export default function BarberProfileScreen() {
     if (!profile) return;
     const hoursError = validateHours(hours ?? {});
     if (hoursError) {
-      Alert.alert('Invalid working hours', hoursError);
+      Alert.alert('Horário de funcionamento inválido', hoursError);
       return;
     }
     setSaving(true);
@@ -105,9 +105,9 @@ export default function BarberProfileScreen() {
       await refreshProfile();
       qc.invalidateQueries({ queryKey: qk.barber(profile.id) });
       qc.invalidateQueries({ queryKey: qk.barbers });
-      Alert.alert('Saved', 'Your shop details have been updated.');
+      Alert.alert('Salvo', 'Os dados da sua barbearia foram atualizados.');
     } catch (e) {
-      Alert.alert('Could not save', e instanceof Error ? e.message : 'Please try again.');
+      Alert.alert('Não foi possível salvar', e instanceof Error ? e.message : 'Tente novamente.');
     } finally {
       setSaving(false);
     }
@@ -116,23 +116,23 @@ export default function BarberProfileScreen() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeader title="Shop profile" />
+        <ScreenHeader title="Perfil da barbearia" />
 
         <View style={styles.form}>
-          <TextField label="Shop name" value={shopName ?? ''} onChangeText={setShopName} />
-          <TextField label="Location" value={location ?? ''} onChangeText={setLocation} placeholder="Neighborhood / city" />
+          <TextField label="Nome da barbearia" value={shopName ?? ''} onChangeText={setShopName} />
+          <TextField label="Localização" value={location ?? ''} onChangeText={setLocation} placeholder="Bairro / cidade" />
           <TextField
             label="Bio"
             value={bio ?? ''}
             onChangeText={setBio}
-            placeholder="Tell clients about your work"
+            placeholder="Conte aos clientes sobre seu trabalho"
             multiline
           />
         </View>
 
         <Card>
           <ThemedText type="subtitle" style={styles.hoursTitle}>
-            Working hours
+            Horário de funcionamento
           </ThemedText>
           {DAYS.map(({ key, label }) => {
             const range = hours?.[key];
@@ -155,7 +155,7 @@ export default function BarberProfileScreen() {
                   </View>
                 ) : (
                   <ThemedText type="caption" muted>
-                    Closed
+                    Fechado
                   </ThemedText>
                 )}
               </View>
@@ -163,10 +163,10 @@ export default function BarberProfileScreen() {
           })}
         </Card>
 
-        <Button title="Save shop" fullWidth loading={saving} onPress={onSave} />
+        <Button title="Salvar barbearia" fullWidth loading={saving} onPress={onSave} />
 
         <Divider spacing={Spacing.sm} />
-        <Button title="Sign out" variant="ghost" fullWidth onPress={() => signOut()} />
+        <Button title="Sair" variant="ghost" fullWidth onPress={() => signOut()} />
       </ScrollView>
     </Screen>
   );

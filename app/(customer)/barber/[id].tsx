@@ -26,7 +26,7 @@ export default function BarberDetailScreen() {
 
   if (barberQ.isLoading) return <Screen><Loading /></Screen>;
   if (barberQ.isError || !barberQ.data)
-    return <Screen><ErrorState message="Couldn't load this barber." /></Screen>;
+    return <Screen><ErrorState message="Não foi possível carregar este barbeiro." /></Screen>;
 
   const barber = barberQ.data;
 
@@ -59,7 +59,7 @@ export default function BarberDetailScreen() {
               {barber.bio ? <ThemedText style={styles.bio}>{barber.bio}</ThemedText> : null}
             </Card>
             <ThemedText type="subtitle" style={styles.servicesTitle}>
-              Services
+              Serviços
             </ThemedText>
           </View>
         }
@@ -80,7 +80,7 @@ export default function BarberDetailScreen() {
           servicesQ.isLoading ? (
             <Loading />
           ) : (
-            <EmptyState icon="cut-outline" title="No services yet" />
+            <EmptyState icon="cut-outline" title="Nenhum serviço ainda" />
           )
         }
       />

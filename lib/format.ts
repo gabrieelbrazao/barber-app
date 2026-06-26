@@ -1,7 +1,7 @@
 /** Formatting helpers shared across screens. */
 
 export function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+  return `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
 }
 
 export function formatDuration(minutes: number): string {
@@ -12,11 +12,11 @@ export function formatDuration(minutes: number): string {
 }
 
 export function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
 export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString([], {
+  return new Date(iso).toLocaleDateString('pt-BR', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',

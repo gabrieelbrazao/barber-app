@@ -25,7 +25,7 @@ export default function SignInScreen() {
       await signIn(email.trim(), password);
       // The root guard swaps the navigator to the role's tabs automatically.
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not sign in.');
+      setError(e instanceof Error ? e.message : 'Não foi possível entrar.');
     } finally {
       setSubmitting(false);
     }
@@ -39,14 +39,14 @@ export default function SignInScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.brand}>
             <Icon name="cut" size={40} color={c.accent} />
-            <ThemedText type="display">Welcome back</ThemedText>
-            <ThemedText muted>Sign in to book your next cut.</ThemedText>
+            <ThemedText type="display">Bem-vindo de volta</ThemedText>
+            <ThemedText muted>Entre para agendar seu próximo corte.</ThemedText>
           </View>
 
           <View style={styles.form}>
             <TextField
-              label="Email"
-              placeholder="you@example.com"
+              label="E-mail"
+              placeholder="voce@exemplo.com"
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
@@ -54,7 +54,7 @@ export default function SignInScreen() {
               onChangeText={setEmail}
             />
             <TextField
-              label="Password"
+              label="Senha"
               placeholder="••••••••"
               secureTextEntry
               autoComplete="current-password"
@@ -63,7 +63,7 @@ export default function SignInScreen() {
               error={error ?? undefined}
             />
             <Button
-              title="Sign in"
+              title="Entrar"
               fullWidth
               loading={submitting}
               disabled={!email || !password}
@@ -72,10 +72,10 @@ export default function SignInScreen() {
           </View>
 
           <View style={styles.footer}>
-            <ThemedText muted>New here? </ThemedText>
+            <ThemedText muted>Novo por aqui? </ThemedText>
             <Link href="/sign-up" replace>
               <ThemedText type="link" style={{ color: c.accent }}>
-                Create an account
+                Criar uma conta
               </ThemedText>
             </Link>
           </View>

@@ -32,7 +32,7 @@ export function Loading() {
 export function ErrorState({ message }: { message?: string }) {
   return (
     <View style={styles.center}>
-      <ThemedText muted>{message ?? 'Something went wrong.'}</ThemedText>
+      <ThemedText muted>{message ?? 'Algo deu errado.'}</ThemedText>
     </View>
   );
 }

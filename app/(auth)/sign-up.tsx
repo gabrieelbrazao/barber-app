@@ -37,13 +37,13 @@ export default function SignUpScreen() {
       });
       if (needsConfirmation) {
         Alert.alert(
-          'Check your email',
-          'Confirm your address, then come back and sign in.'
+          'Verifique seu e-mail',
+          'Confirme seu endereço e depois volte para entrar.'
         );
       }
       // With auto-confirm on, the session arrives and the root guard routes us in.
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not create account.');
+      setError(e instanceof Error ? e.message : 'Não foi possível criar a conta.');
     } finally {
       setSubmitting(false);
     }
@@ -56,33 +56,33 @@ export default function SignUpScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.head}>
-            <ThemedText type="display">Create account</ThemedText>
-            <ThemedText muted>Join as a client or set up your barber shop.</ThemedText>
+            <ThemedText type="display">Criar conta</ThemedText>
+            <ThemedText muted>Cadastre-se como cliente ou configure sua barbearia.</ThemedText>
           </View>
 
           <View>
             <ThemedText type="label" style={styles.roleLabel}>
-              I am a
+              Eu sou
             </ThemedText>
             <View style={styles.roles}>
-              <Chip label="Customer" selected={role === 'customer'} onPress={() => setRole('customer')} />
-              <Chip label="Barber" selected={role === 'barber'} onPress={() => setRole('barber')} />
+              <Chip label="Cliente" selected={role === 'customer'} onPress={() => setRole('customer')} />
+              <Chip label="Barbeiro" selected={role === 'barber'} onPress={() => setRole('barber')} />
             </View>
           </View>
 
           <View style={styles.form}>
-            <TextField label="Full name" placeholder="Jane Doe" value={fullName} onChangeText={setFullName} />
+            <TextField label="Nome completo" placeholder="João Silva" value={fullName} onChangeText={setFullName} />
             {role === 'barber' ? (
               <TextField
-                label="Shop name"
-                placeholder="The Sharp Edge"
+                label="Nome da barbearia"
+                placeholder="Navalha de Ouro"
                 value={shopName}
                 onChangeText={setShopName}
               />
             ) : null}
             <TextField
-              label="Email"
-              placeholder="you@example.com"
+              label="E-mail"
+              placeholder="voce@exemplo.com"
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
@@ -90,8 +90,8 @@ export default function SignUpScreen() {
               onChangeText={setEmail}
             />
             <TextField
-              label="Password"
-              placeholder="At least 6 characters"
+              label="Senha"
+              placeholder="Pelo menos 6 caracteres"
               secureTextEntry
               autoComplete="new-password"
               value={password}
@@ -99,7 +99,7 @@ export default function SignUpScreen() {
               error={error ?? undefined}
             />
             <Button
-              title="Create account"
+              title="Criar conta"
               fullWidth
               loading={submitting}
               disabled={!canSubmit}
@@ -108,10 +108,10 @@ export default function SignUpScreen() {
           </View>
 
           <View style={styles.footer}>
-            <ThemedText muted>Already have an account? </ThemedText>
+            <ThemedText muted>Já tem uma conta? </ThemedText>
             <Link href="/sign-in" replace>
               <ThemedText type="link" style={{ color: c.accent }}>
-                Sign in
+                Entrar
               </ThemedText>
             </Link>
           </View>

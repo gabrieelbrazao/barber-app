@@ -18,21 +18,21 @@ export default function CustomerTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Browse',
+          title: 'Buscar',
           tabBarIcon: ({ color, size }) => <Icon name="search" color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="appointments"
         options={{
-          title: 'Appointments',
+          title: 'Agendamentos',
           tabBarIcon: ({ color, size }) => <Icon name="calendar" color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'Perfil',
           tabBarIcon: ({ color, size }) => <Icon name="person" color={color} size={size} />,
         }}
       />

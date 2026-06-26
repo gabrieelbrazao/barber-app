@@ -21,11 +21,13 @@ export default function EditServiceScreen() {
   const save = useSaveService(barberId);
 
   const [name, setName] = useState(existing?.name ?? '');
-  const [price, setPrice] = useState(existing ? (existing.price_cents / 100).toFixed(2) : '');
+  const [price, setPrice] = useState(
+    existing ? (existing.price_cents / 100).toFixed(2).replace('.', ',') : ''
+  );
   const [duration, setDuration] = useState(existing ? String(existing.duration_minutes) : '');
   const [active, setActive] = useState(existing?.active ?? true);
 
-  const priceCents = Math.round(parseFloat(price) * 100);
+  const priceCents = Math.round(parseFloat(price.replace(',', '.')) * 100);
   const durationMinutes = parseInt(duration, 10);
   const valid = name.trim() && priceCents >= 0 && durationMinutes > 0;
 
@@ -41,25 +43,25 @@ export default function EditServiceScreen() {
       });
       router.back();
     } catch (e) {
-      Alert.alert('Could not save', e instanceof Error ? e.message : 'Please try again.');
+      Alert.alert('Não foi possível salvar', e instanceof Error ? e.message : 'Tente novamente.');
     }
   }
 
   return (
     <Screen edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
-        <ThemedText type="title">{serviceId ? 'Edit service' : 'New service'}</ThemedText>
+        <ThemedText type="title">{serviceId ? 'Editar serviço' : 'Novo serviço'}</ThemedText>
 
-        <TextField label="Name" placeholder="Classic Cut" value={name} onChangeText={setName} />
+        <TextField label="Nome" placeholder="Corte Clássico" value={name} onChangeText={setName} />
         <TextField
-          label="Price (USD)"
-          placeholder="35.00"
+          label="Preço (R$)"
+          placeholder="35,00"
           keyboardType="decimal-pad"
           value={price}
           onChangeText={setPrice}
         />
         <TextField
-          label="Duration (minutes)"
+          label="Duração (minutos)"
           placeholder="45"
           keyboardType="number-pad"
           value={duration}
@@ -68,9 +70,9 @@ export default function EditServiceScreen() {
 
         <View style={styles.toggleRow}>
           <View style={styles.toggleText}>
-            <ThemedText type="label">Visible to customers</ThemedText>
+            <ThemedText type="label">Visível para clientes</ThemedText>
             <ThemedText type="caption" muted>
-              Hidden services can&apos;t be booked.
+              Serviços ocultos não podem ser agendados.
             </ThemedText>
           </View>
           <Switch
@@ -81,7 +83,7 @@ export default function EditServiceScreen() {
         </View>
 
         <Button
-          title={serviceId ? 'Save changes' : 'Add service'}
+          title={serviceId ? 'Salvar alterações' : 'Adicionar serviço'}
           fullWidth
           disabled={!valid}
           loading={save.isPending}

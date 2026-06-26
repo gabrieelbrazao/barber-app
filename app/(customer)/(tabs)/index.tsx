@@ -39,9 +39,9 @@ export default function BrowseScreen() {
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <>
-            <ScreenHeader title="Find a barber" subtitle="Book your next cut" />
+            <ScreenHeader title="Encontre um barbeiro" subtitle="Agende seu próximo corte" />
             <TextField
-              placeholder="Search shops or barbers"
+              placeholder="Buscar barbearias ou barbeiros"
               value={search}
               onChangeText={setSearch}
               left={<Icon name="search" size={18} color={c.textMuted} />}
@@ -62,9 +62,9 @@ export default function BrowseScreen() {
           isLoading ? (
             <Loading />
           ) : isError ? (
-            <ErrorState message="Couldn't load barbers." />
+            <ErrorState message="Não foi possível carregar os barbeiros." />
           ) : (
-            <EmptyState icon="cut-outline" title="No barbers found" message="Try a different search." />
+            <EmptyState icon="cut-outline" title="Nenhum barbeiro encontrado" message="Tente uma busca diferente." />
           )
         }
       />

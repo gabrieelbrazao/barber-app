@@ -46,7 +46,7 @@ export function ServiceCard({
             </ThemedText>
           </View>
         </View>
-        {onBook ? <Button title="Book" size="sm" onPress={onBook} /> : actions}
+        {onBook ? <Button title="Agendar" size="sm" onPress={onBook} /> : actions}
       </View>
     </Card>
   );

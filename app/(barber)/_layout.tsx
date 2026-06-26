@@ -6,7 +6,7 @@ export default function BarberLayout() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen
         name="edit-service"
-        options={{ headerShown: true, presentation: 'modal', title: 'Service' }}
+        options={{ headerShown: true, presentation: 'modal', title: 'Serviço' }}
       />
     </Stack>
   );

@@ -54,7 +54,7 @@ export default function BookScreen() {
 
   if (barberQ.isLoading || servicesQ.isLoading) return <Screen><Loading /></Screen>;
   if (barberQ.isError || !service)
-    return <Screen><ErrorState message="Couldn't load booking details." /></Screen>;
+    return <Screen><ErrorState message="Não foi possível carregar os detalhes do agendamento." /></Screen>;
 
   async function onConfirm() {
     if (!selected || !service || !profile) return;
@@ -67,10 +67,10 @@ export default function BookScreen() {
         start: selected,
         end,
       });
-      Alert.alert('Booked!', 'Your appointment request was sent.');
+      Alert.alert('Agendado!', 'Sua solicitação de agendamento foi enviada.');
       router.replace('/appointments');
     } catch (e) {
-      Alert.alert('Could not book', e instanceof Error ? e.message : 'Please try again.');
+      Alert.alert('Não foi possível agendar', e instanceof Error ? e.message : 'Tente novamente.');
     }
   }
 
@@ -86,13 +86,13 @@ export default function BookScreen() {
 
         <View style={styles.section}>
           <ThemedText type="label" muted>
-            DATE
+            DATA
           </ThemedText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.days}>
             {days.map((d) => (
               <Chip
                 key={d.toISOString()}
-                label={d.toLocaleDateString([], { weekday: 'short', day: 'numeric' })}
+                label={d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' })}
                 selected={d.toDateString() === day.toDateString()}
                 onPress={() => {
                   setDay(d);
@@ -105,12 +105,12 @@ export default function BookScreen() {
 
         <View style={styles.section}>
           <ThemedText type="label" muted>
-            TIME
+            HORÁRIO
           </ThemedText>
           {dayApptsQ.isLoading ? (
             <Loading />
           ) : slots.length === 0 ? (
-            <EmptyState icon="moon-outline" title="Closed this day" message="Pick another date." />
+            <EmptyState icon="moon-outline" title="Fechado neste dia" message="Escolha outra data." />
           ) : (
             <View style={styles.slots}>
               {slots.map((s) => (
@@ -129,7 +129,7 @@ export default function BookScreen() {
 
       <View style={styles.footer}>
         <Button
-          title={selected ? `Confirm ${formatTime(selected.toISOString())}` : 'Select a time'}
+          title={selected ? `Confirmar ${formatTime(selected.toISOString())}` : 'Selecione um horário'}
           fullWidth
           disabled={!selected}
           loading={book.isPending}

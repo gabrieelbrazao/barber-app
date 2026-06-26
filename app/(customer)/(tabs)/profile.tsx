@@ -23,9 +23,9 @@ export default function CustomerProfileScreen() {
         .eq('id', profile.id);
       if (error) throw error;
       await refreshProfile();
-      Alert.alert('Saved', 'Your profile has been updated.');
+      Alert.alert('Salvo', 'Seu perfil foi atualizado.');
     } catch (e) {
-      Alert.alert('Could not save', e instanceof Error ? e.message : 'Please try again.');
+      Alert.alert('Não foi possível salvar', e instanceof Error ? e.message : 'Tente novamente.');
     } finally {
       setSaving(false);
     }
@@ -34,13 +34,13 @@ export default function CustomerProfileScreen() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeader title="Profile" />
+        <ScreenHeader title="Perfil" />
 
         <Card>
           <View style={styles.identity}>
             <Avatar name={fullName || profile?.full_name} size={64} />
             <View style={styles.identityText}>
-              <ThemedText type="subtitle">{profile?.full_name || 'Your account'}</ThemedText>
+              <ThemedText type="subtitle">{profile?.full_name || 'Sua conta'}</ThemedText>
               <ThemedText type="caption" muted>
                 {session?.user.email}
               </ThemedText>
@@ -49,19 +49,19 @@ export default function CustomerProfileScreen() {
         </Card>
 
         <View style={styles.form}>
-          <TextField label="Full name" value={fullName} onChangeText={setFullName} />
+          <TextField label="Nome completo" value={fullName} onChangeText={setFullName} />
           <TextField
-            label="Phone"
+            label="Telefone"
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
-            placeholder="Optional"
+            placeholder="Opcional"
           />
-          <Button title="Save changes" fullWidth loading={saving} onPress={onSave} />
+          <Button title="Salvar alterações" fullWidth loading={saving} onPress={onSave} />
         </View>
 
         <Divider spacing={Spacing.sm} />
-        <Button title="Sign out" variant="ghost" fullWidth onPress={() => signOut()} />
+        <Button title="Sair" variant="ghost" fullWidth onPress={() => signOut()} />
       </ScrollView>
     </Screen>
   );
