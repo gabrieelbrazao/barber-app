@@ -22,15 +22,14 @@ export default function EditServiceScreen() {
   const save = useSaveService(barberId);
 
   const [name, setName] = useState(existing?.name ?? '');
-  const [price, setPrice] = useState(
-    existing ? (existing.price_cents / 100).toFixed(2).replace('.', ',') : ''
-  );
+  const [price, setPrice] = useState(existing ? maskCurrency(String(existing.price_cents)) : '');
   const [duration, setDuration] = useState(existing ? String(existing.duration_minutes) : '');
   const [active, setActive] = useState(existing?.active ?? true);
 
-  const priceCents = Math.round(parseFloat(price.replace(',', '.')) * 100);
+  // The masked value mirrors its digits as cents (e.g. "35,00" -> 3500).
+  const priceCents = parseInt(price.replace(/\D/g, '') || '0', 10);
   const durationMinutes = parseInt(duration, 10);
-  const valid = name.trim() && priceCents >= 0 && durationMinutes > 0;
+  const valid = name.trim() && price.length > 0 && durationMinutes > 0;
 
   async function onSave() {
     if (!valid) return;
@@ -55,11 +54,12 @@ export default function EditServiceScreen() {
 
         <TextField label="Nome" placeholder="Corte Clássico" value={name} onChangeText={setName} />
         <TextField
-          label="Preço (R$)"
-          placeholder="35,00"
-          keyboardType="decimal-pad"
+          label="Preço"
+          placeholder="0,00"
+          keyboardType="number-pad"
           value={price}
-          onChangeText={setPrice}
+          onChangeText={(t) => setPrice(maskCurrency(t))}
+          left={<ThemedText muted>R$</ThemedText>}
         />
         <TextField
           label="Duração (minutos)"
@@ -93,6 +93,13 @@ export default function EditServiceScreen() {
       </ScrollView>
     </Screen>
   );
+}
+
+/** Treats the typed digits as cents and renders them as "1.234,56" (no thousands sep needed for typical prices). */
+function maskCurrency(input: string): string {
+  const digits = input.replace(/\D/g, '');
+  if (!digits) return '';
+  return (parseInt(digits, 10) / 100).toFixed(2).replace('.', ',');
 }
 
 const styles = StyleSheet.create({

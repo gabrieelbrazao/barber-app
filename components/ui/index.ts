@@ -12,6 +12,7 @@ export { IconButton } from './icon-button';
 export { Screen, Loading, ErrorState } from './screen';
 export { ScreenHeader } from './screen-header';
 export { ServiceCard } from './service-card';
+export { Skeleton, BarberListSkeleton, AppointmentListSkeleton } from './skeleton';
 export { SlotButton } from './slot-button';
 export { Stars } from './stars';
 export { TextField } from './text-field';

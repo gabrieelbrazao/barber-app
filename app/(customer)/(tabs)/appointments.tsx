@@ -3,10 +3,10 @@ import { Alert, FlatList, StyleSheet } from 'react-native';
 
 import {
   AppointmentCard,
+  AppointmentListSkeleton,
   Button,
   EmptyState,
   ErrorState,
-  Loading,
   Screen,
   ScreenHeader,
 } from '@/components/ui';
@@ -53,7 +53,7 @@ export default function CustomerAppointmentsScreen() {
         }}
         ListEmptyComponent={
           isLoading ? (
-            <Loading />
+            <AppointmentListSkeleton />
           ) : isError ? (
             <ErrorState message="Não foi possível carregar seus agendamentos." />
           ) : (

@@ -38,7 +38,17 @@ export function Avatar({ name, uri, size = 48 }: AvatarProps) {
         styles.fallback,
         { width: size, height: size, borderRadius: radius, backgroundColor: c.surfaceAlt },
       ]}>
-      <ThemedText type="label" style={{ fontSize: size * 0.36, color: c.accent }}>
+      <ThemedText
+        type="label"
+        style={{
+          fontSize: size * 0.36,
+          // Match line height to the (overridden) font size so tall glyphs aren't
+          // clipped by the smaller default line box, and disable Android font padding.
+          lineHeight: size * 0.42,
+          includeFontPadding: false,
+          textAlignVertical: 'center',
+          color: c.accent,
+        }}>
         {initials(name)}
       </ThemedText>
     </View>

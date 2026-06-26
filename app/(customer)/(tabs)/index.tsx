@@ -4,10 +4,10 @@ import { FlatList, StyleSheet } from 'react-native';
 
 import {
   BarberCard,
+  BarberListSkeleton,
   EmptyState,
   ErrorState,
   Icon,
-  Loading,
   Screen,
   ScreenHeader,
   TextField,
@@ -60,7 +60,7 @@ export default function BrowseScreen() {
         )}
         ListEmptyComponent={
           isLoading ? (
-            <Loading />
+            <BarberListSkeleton />
           ) : isError ? (
             <ErrorState message="Não foi possível carregar os barbeiros." />
           ) : (

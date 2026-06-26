@@ -6,16 +6,28 @@ import { Avatar, Button, Card, Divider, Screen, ScreenHeader, TextField } from '
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import { toUserMessage } from '@/lib/errors';
+import { maskPhoneBR } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 
 export default function CustomerProfileScreen() {
   const { session, profile, signOut, refreshProfile } = useSession();
   const [fullName, setFullName] = useState(profile?.full_name ?? '');
-  const [phone, setPhone] = useState(profile?.phone ?? '');
+  const [phone, setPhone] = useState(maskPhoneBR(profile?.phone ?? ''));
   const [saving, setSaving] = useState(false);
 
+  const dirty =
+    fullName.trim() !== (profile?.full_name ?? '') ||
+    (phone.trim() || null) !== (profile?.phone ?? null);
+
+  function onSignOut() {
+    Alert.alert('Sair da conta?', 'Você precisará entrar novamente.', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Sair', style: 'destructive', onPress: () => signOut() },
+    ]);
+  }
+
   async function onSave() {
-    if (!profile) return;
+    if (!profile || !dirty) return;
     setSaving(true);
     try {
       const { error } = await supabase
@@ -54,15 +66,24 @@ export default function CustomerProfileScreen() {
           <TextField
             label="Telefone"
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={(t) => setPhone(maskPhoneBR(t))}
             keyboardType="phone-pad"
-            placeholder="Opcional"
+            textContentType="telephoneNumber"
+            autoComplete="tel"
+            maxLength={15}
+            placeholder="(11) 99999-9999"
           />
-          <Button title="Salvar alterações" fullWidth loading={saving} onPress={onSave} />
+          <Button
+            title={dirty ? 'Salvar alterações' : 'Tudo salvo'}
+            fullWidth
+            loading={saving}
+            disabled={!dirty}
+            onPress={onSave}
+          />
         </View>
 
         <Divider spacing={Spacing.sm} />
-        <Button title="Sair" variant="ghost" fullWidth onPress={() => signOut()} />
+        <Button title="Sair" variant="ghost" fullWidth onPress={onSignOut} />
       </ScrollView>
     </Screen>
   );

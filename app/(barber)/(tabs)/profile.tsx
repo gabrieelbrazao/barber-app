@@ -1,6 +1,7 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, Divider, ErrorState, Loading, Screen, ScreenHeader, TextField } from '@/components/ui';
@@ -65,6 +66,21 @@ export default function BarberProfileScreen() {
   if (barberQ.isLoading) return <Screen><Loading /></Screen>;
   if (barberQ.isError) return <Screen><ErrorState message="Não foi possível carregar sua barbearia." /></Screen>;
 
+  const saved = barberQ.data;
+  const dirty =
+    !!saved &&
+    ((shopName ?? '') !== (saved.shopName ?? '') ||
+      (location ?? '') !== (saved.location ?? '') ||
+      (bio ?? '') !== (saved.bio ?? '') ||
+      JSON.stringify(hours ?? {}) !== JSON.stringify(saved.workingHours ?? {}));
+
+  function onSignOut() {
+    Alert.alert('Sair da conta?', 'Você precisará entrar novamente.', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Sair', style: 'destructive', onPress: () => signOut() },
+    ]);
+  }
+
   function setDayOpen(key: keyof WorkingHours, open: boolean) {
     setHours((h) => ({ ...h, [key]: open ? ['09:00', '18:00'] : null }));
   }
@@ -78,7 +94,7 @@ export default function BarberProfileScreen() {
   }
 
   async function onSave() {
-    if (!profile) return;
+    if (!profile || !dirty) return;
     const hoursError = validateHours(hours ?? {});
     if (hoursError) {
       Alert.alert('Horário de funcionamento inválido', hoursError);
@@ -150,9 +166,9 @@ export default function BarberProfileScreen() {
                 </View>
                 {isOpen ? (
                   <View style={styles.times}>
-                    <TimeInput value={range[0]} onChangeText={(t) => setDayTime(key, 0, t)} />
+                    <TimeField value={range[0]} onChange={(t) => setDayTime(key, 0, t)} />
                     <ThemedText muted>–</ThemedText>
-                    <TimeInput value={range[1]} onChangeText={(t) => setDayTime(key, 1, t)} />
+                    <TimeField value={range[1]} onChange={(t) => setDayTime(key, 1, t)} />
                   </View>
                 ) : (
                   <ThemedText type="caption" muted>
@@ -164,26 +180,76 @@ export default function BarberProfileScreen() {
           })}
         </Card>
 
-        <Button title="Salvar barbearia" fullWidth loading={saving} onPress={onSave} />
+        <Button
+          title={dirty ? 'Salvar barbearia' : 'Tudo salvo'}
+          fullWidth
+          loading={saving}
+          disabled={!dirty}
+          onPress={onSave}
+        />
 
         <Divider spacing={Spacing.sm} />
-        <Button title="Sair" variant="ghost" fullWidth onPress={() => signOut()} />
+        <Button title="Sair" variant="ghost" fullWidth onPress={onSignOut} />
       </ScrollView>
     </Screen>
   );
 }
 
-function TimeInput({ value, onChangeText }: { value: string; onChangeText: (t: string) => void }) {
+/** Tappable time chip backed by the native time picker — no manual HH:MM typing. */
+function TimeField({ value, onChange }: { value: string; onChange: (t: string) => void }) {
   const c = useColors();
+  const [open, setOpen] = useState(false);
+
+  const [h, m] = value.split(':');
+  const base = new Date();
+  base.setHours(Number(h) || 0, Number(m) || 0, 0, 0);
+
+  function commit(d: Date) {
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    onChange(`${hh}:${mm}`);
+  }
+
   return (
-    <TextInput
-      value={value}
-      onChangeText={onChangeText}
-      placeholder="09:00"
-      placeholderTextColor={c.textMuted}
-      maxLength={5}
-      style={[styles.timeInput, { color: c.text, borderColor: c.border, backgroundColor: c.surface }]}
-    />
+    <>
+      <Pressable
+        onPress={() => setOpen(true)}
+        style={[styles.timeInput, { borderColor: c.border, backgroundColor: c.surface }]}>
+        <ThemedText style={{ color: c.text, fontSize: 15 }}>{value}</ThemedText>
+      </Pressable>
+
+      {/* Android shows a dialog that fires once with the result. */}
+      {open && Platform.OS !== 'ios' && (
+        <DateTimePicker
+          value={base}
+          mode="time"
+          is24Hour
+          onChange={(e, d) => {
+            setOpen(false);
+            if (e.type === 'set' && d) commit(d);
+          }}
+        />
+      )}
+
+      {/* iOS spinner lives in a small confirm sheet. */}
+      {Platform.OS === 'ios' && (
+        <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+          <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
+            <Pressable style={[styles.sheet, { backgroundColor: c.surface }]}>
+              <DateTimePicker
+                value={base}
+                mode="time"
+                is24Hour
+                display="spinner"
+                textColor={c.text}
+                onChange={(_e, d) => d && commit(d)}
+              />
+              <Button title="Concluir" fullWidth onPress={() => setOpen(false)} />
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
+    </>
   );
 }
 
@@ -218,9 +284,21 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Radius.sm,
     paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
     width: 64,
-    textAlign: 'center',
-    fontSize: 15,
+    minHeight: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  sheet: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xl,
+    borderTopLeftRadius: Radius.lg,
+    borderTopRightRadius: Radius.lg,
+    gap: Spacing.md,
   },
 });
