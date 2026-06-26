@@ -1,21 +1,18 @@
 /**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
+ * Resolve a single themed color, honoring per-call light/dark overrides, the
+ * shop's runtime branding, and the user's theme-mode choice.
  */
 
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useBranding } from '@/contexts/branding';
+import { useThemeMode } from '@/contexts/theme-mode';
+import type { ColorName } from '@/constants/theme';
 
-export function useThemeColor(
-  props: { light?: string; dark?: string },
-  colorName: keyof typeof Colors.light & keyof typeof Colors.dark
-) {
-  const theme = useColorScheme() ?? 'light';
-  const colorFromProps = props[theme];
+export function useThemeColor(props: { light?: string; dark?: string }, colorName: ColorName) {
+  const { scheme } = useThemeMode();
+  const colorFromProps = props[scheme];
 
   if (colorFromProps) {
     return colorFromProps;
-  } else {
-    return Colors[theme][colorName];
   }
+  return useBranding().palette[scheme][colorName];
 }

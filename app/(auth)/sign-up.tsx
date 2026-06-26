@@ -17,14 +17,14 @@ export default function SignUpScreen() {
 
   const [role, setRole] = useState<UserRole>('customer');
   const [fullName, setFullName] = useState('');
-  const [shopName, setShopName] = useState('');
+  const [title, setTitle] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = fullName && email && password.length >= 6 && (role === 'customer' || shopName);
+  const canSubmit = fullName && email && password.length >= 6;
 
   async function onSubmit() {
     setError(null);
@@ -35,7 +35,7 @@ export default function SignUpScreen() {
         password,
         fullName: fullName.trim(),
         role,
-        shopName: role === 'barber' ? shopName.trim() : undefined,
+        title: role === 'barber' ? title.trim() || undefined : undefined,
       });
       if (needsConfirmation) {
         Alert.alert(
@@ -59,7 +59,7 @@ export default function SignUpScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.head}>
             <ThemedText type="display">Criar conta</ThemedText>
-            <ThemedText muted>Cadastre-se como cliente ou configure sua barbearia.</ThemedText>
+            <ThemedText muted>Cadastre-se como cliente ou membro da equipe.</ThemedText>
           </View>
 
           <View>
@@ -76,10 +76,10 @@ export default function SignUpScreen() {
             <TextField label="Nome completo" placeholder="João Silva" value={fullName} onChangeText={setFullName} />
             {role === 'barber' ? (
               <TextField
-                label="Nome da barbearia"
-                placeholder="Navalha de Ouro"
-                value={shopName}
-                onChangeText={setShopName}
+                label="Cargo"
+                placeholder="Ex.: Barbeiro Sênior"
+                value={title}
+                onChangeText={setTitle}
               />
             ) : null}
             <TextField

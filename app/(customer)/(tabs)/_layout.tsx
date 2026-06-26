@@ -18,8 +18,8 @@ export default function CustomerTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Buscar',
-          tabBarIcon: ({ color, size }) => <Icon name="search" color={color} size={size} />,
+          title: 'Início',
+          tabBarIcon: ({ color, size }) => <Icon name="home" color={color} size={size} />,
         }}
       />
       <Tabs.Screen

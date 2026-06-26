@@ -12,9 +12,10 @@ import 'react-native-reanimated';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Screen } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
+import { BrandingProvider, useBranding } from '@/contexts/branding';
 import { SessionProvider, useSession } from '@/contexts/session';
+import { ThemeModeProvider, useThemeMode } from '@/contexts/theme-mode';
 import { useAppFonts } from '@/hooks/use-app-fonts';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { queryClient } from '@/lib/query-client';
 
 SplashScreen.preventAutoHideAsync();
@@ -30,9 +31,15 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <SessionProvider>
-            <RootNavigator />
-          </SessionProvider>
+          {/* Theme mode (system/light/dark) + branding wrap the session so the theme
+              and logo are resolved on the auth screen too. */}
+          <ThemeModeProvider>
+            <BrandingProvider>
+              <SessionProvider>
+                <RootNavigator />
+              </SessionProvider>
+            </BrandingProvider>
+          </ThemeModeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
@@ -40,19 +47,36 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const colorScheme = useColorScheme();
   const { session, profile, loading } = useSession();
+  const branding = useBranding();
+  const { scheme, ready: themeReady } = useThemeMode();
 
-  // Hold the splash until auth + profile resolve, so guards settle before first paint.
+  // Hold the splash until auth + profile, branding, AND the saved theme choice
+  // resolve, so guards settle and the themed palette is ready before first paint.
+  const ready = !loading && branding.ready && themeReady;
   useEffect(() => {
-    if (!loading) {
+    if (ready) {
       SplashScreen.hideAsync();
     }
-  }, [loading]);
+  }, [ready]);
 
-  if (loading) {
+  if (!ready) {
     return null;
   }
+
+  const palette = branding.palette[scheme];
+  const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+  const navTheme = {
+    ...base,
+    colors: {
+      ...base.colors,
+      background: palette.background,
+      card: palette.surface,
+      text: palette.text,
+      primary: palette.accent,
+      border: palette.border,
+    },
+  };
 
   const isCustomer = !!session && profile?.role === 'customer';
   const isBarber = !!session && profile?.role === 'barber';
@@ -62,15 +86,15 @@ function RootNavigator() {
   // state, not a loading gap — show an escape hatch instead of an empty navigator.
   if (session && !isCustomer && !isBarber) {
     return (
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={navTheme}>
         <ProfileUnavailable />
-        <StatusBar style="auto" />
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       </ThemeProvider>
     );
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={navTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Protected guard={!session}>
           <Stack.Screen name="(auth)" />
@@ -86,7 +110,7 @@ function RootNavigator() {
           <Stack.Screen name="catalog" options={{ headerShown: true, title: 'Catálogo' }} />
         </Stack.Protected>
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>
   );
 }

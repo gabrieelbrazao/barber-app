@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useState } from 'react';
 
+import { SHOP_ID } from '@/lib/config';
 import type { Profile, UserRole } from '@/lib/database.types';
 import { supabase } from '@/lib/supabase';
 
@@ -9,7 +10,8 @@ type SignUpParams = {
   password: string;
   fullName: string;
   role: UserRole;
-  shopName?: string;
+  /** Staff role label for barbers (e.g. "Senior Barber"); the shop itself is provisioned separately. */
+  title?: string;
 };
 
 type SessionContextValue = {
@@ -28,7 +30,7 @@ const SessionContext = createContext<SessionContextValue | undefined>(undefined)
 async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, role, phone, avatar_url')
+    .select('id, full_name, role, phone, avatar_url, shop_id')
     .eq('id', userId)
     .maybeSingle();
   if (error) throw error;
@@ -86,11 +88,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     },
-    async signUp({ email, password, fullName, role, shopName }) {
+    async signUp({ email, password, fullName, role, title }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName, role, shop_name: shopName } },
+        options: { data: { full_name: fullName, role, title, shop_id: SHOP_ID } },
       });
       if (error) throw error;
       // No session means email confirmation is required for this project.

@@ -1,19 +1,24 @@
--- Dev seed: two demo barbers with services. Run AFTER 0001_init.sql.
--- Creates real auth users so the handle_new_user() trigger builds their profiles
--- and barber_profiles from metadata; we then enrich those rows and add services.
+-- Dev seed: ONE demo shop ("The Sharp Edge") with two staff barbers, a customer,
+-- services and banners. Run AFTER the migrations. The app's EXPO_PUBLIC_SHOP_ID
+-- for local dev must equal the shop id below.
 --
+-- Demo shop id: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
 -- Demo logins (email / password):
---   marcus@demo.test  / password123
---   tony@demo.test    / password123
+--   marcus@demo.test  / password123   (barber, shop owner)
+--   tony@demo.test     / password123   (barber, staff)
+--   joao@demo.test     / password123   (customer)
 --
 -- NOTE: dev-only. Inserting directly into auth.users is intended for local/test projects.
 
--- Fixed UUIDs so re-running stays idempotent.
--- Marcus: 11111111-1111-1111-1111-111111111111
--- Tony:   22222222-2222-2222-2222-222222222222
+-- Shop first (profiles.shop_id and barber_profiles.shop_id FK it). owner_id is set
+-- after the owner's user exists.
+insert into public.shops (id, name, location, colors)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'The Sharp Edge', 'Downtown', '{}'::jsonb)
+on conflict (id) do nothing;
 
--- NOTE: the token columns must be '' (not NULL). GoTrue scans them as non-nullable
--- strings, so a NULL there makes login 500 with "converting NULL to string is unsupported".
+-- Auth users. handle_new_user() builds profiles (+ barber_profiles) from metadata,
+-- stamping shop_id so they join the demo shop.
+-- NOTE: token columns must be '' (not NULL) — GoTrue scans them as non-nullable strings.
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
   created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
@@ -25,13 +30,19 @@ values
    'authenticated', 'authenticated', 'marcus@demo.test',
    crypt('password123', gen_salt('bf')), now(), now(), now(),
    '{"provider":"email","providers":["email"]}',
-   '{"full_name":"Marcus Cole","role":"barber","shop_name":"The Sharp Edge"}',
+   '{"full_name":"Marcus Cole","role":"barber","title":"Master Barber","shop_id":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}',
    '', '', '', '', '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '22222222-2222-2222-2222-222222222222',
    'authenticated', 'authenticated', 'tony@demo.test',
    crypt('password123', gen_salt('bf')), now(), now(), now(),
    '{"provider":"email","providers":["email"]}',
-   '{"full_name":"Tony Russo","role":"barber","shop_name":"Russo & Sons"}',
+   '{"full_name":"Tony Russo","role":"barber","title":"Senior Barber","shop_id":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}',
+   '', '', '', '', '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333',
+   'authenticated', 'authenticated', 'joao@demo.test',
+   crypt('password123', gen_salt('bf')), now(), now(), now(),
+   '{"provider":"email","providers":["email"]}',
+   '{"full_name":"João Silva","role":"customer","shop_id":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}',
    '', '', '', '', '', '', '', '')
 on conflict (id) do nothing;
 
@@ -41,27 +52,39 @@ values
   (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
    '{"sub":"11111111-1111-1111-1111-111111111111","email":"marcus@demo.test"}', 'email', now(), now(), now()),
   (gen_random_uuid(), '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222',
-   '{"sub":"22222222-2222-2222-2222-222222222222","email":"tony@demo.test"}', 'email', now(), now(), now())
+   '{"sub":"22222222-2222-2222-2222-222222222222","email":"tony@demo.test"}', 'email', now(), now(), now()),
+  (gen_random_uuid(), '33333333-3333-3333-3333-333333333333', '33333333-3333-3333-3333-333333333333',
+   '{"sub":"33333333-3333-3333-3333-333333333333","email":"joao@demo.test"}', 'email', now(), now(), now())
 on conflict do nothing;
+
+-- Marcus owns the shop.
+update public.shops
+  set owner_id = '11111111-1111-1111-1111-111111111111'
+where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
 -- Enrich the barber_profiles the trigger created.
 update public.barber_profiles set
-  bio = 'Master barber, 12 years on the chair. Specializing in skin fades and classic scissor work.',
-  location = 'Downtown'
+  bio = 'Master barber, 12 years on the chair. Specializing in skin fades and classic scissor work.'
 where id = '11111111-1111-1111-1111-111111111111';
 
 update public.barber_profiles set
-  bio = 'Old-school hot-towel shaves and timeless cuts. Family shop since 1998.',
-  location = 'Riverside'
+  bio = 'Old-school hot-towel shaves and timeless cuts. Family shop since 1998.'
 where id = '22222222-2222-2222-2222-222222222222';
 
--- Services.
-insert into public.services (barber_id, name, price_cents, duration_minutes)
+-- Services (scoped to the shop).
+insert into public.services (barber_id, shop_id, name, price_cents, duration_minutes)
 values
-  ('11111111-1111-1111-1111-111111111111', 'Classic Cut', 3500, 45),
-  ('11111111-1111-1111-1111-111111111111', 'Skin Fade', 4000, 45),
-  ('11111111-1111-1111-1111-111111111111', 'Beard Trim', 1500, 20),
-  ('22222222-2222-2222-2222-222222222222', 'Scissor Cut', 3800, 50),
-  ('22222222-2222-2222-2222-222222222222', 'Hot Towel Shave', 3000, 40),
-  ('22222222-2222-2222-2222-222222222222', 'Cut & Shave', 6000, 75)
+  ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Classic Cut', 3500, 45),
+  ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Skin Fade', 4000, 45),
+  ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Beard Trim', 1500, 20),
+  ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Scissor Cut', 3800, 50),
+  ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Hot Towel Shave', 3000, 40),
+  ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Cut & Shave', 6000, 75)
+on conflict do nothing;
+
+-- Promo banners.
+insert into public.banners (shop_id, image_url, title, sort_order, active)
+values
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'https://picsum.photos/seed/sharpedge1/800/400', '20% off skin fades this week', 0, true),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'https://picsum.photos/seed/sharpedge2/800/400', 'Hot towel shave — book now', 1, true)
 on conflict do nothing;

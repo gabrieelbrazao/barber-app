@@ -7,7 +7,6 @@ import {
   Card,
   EmptyState,
   ErrorState,
-  Icon,
   Loading,
   Screen,
   ServiceCard,
@@ -15,10 +14,8 @@ import {
 } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useBarber, useServices } from '@/lib/queries';
-import { useColors } from '@/hooks/use-colors';
 
 export default function BarberDetailScreen() {
-  const c = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -43,17 +40,11 @@ export default function BarberDetailScreen() {
               <View style={styles.row}>
                 <Avatar name={barber.name} uri={barber.avatarUrl} size={64} />
                 <View style={styles.info}>
-                  <ThemedText type="title">{barber.shopName || barber.name}</ThemedText>
-                  <ThemedText type="caption" muted>
-                    {barber.name}
-                  </ThemedText>
-                  {barber.location ? (
-                    <View style={styles.location}>
-                      <Icon name="location-outline" size={14} color={c.textMuted} />
-                      <ThemedText type="caption" muted>
-                        {barber.location}
-                      </ThemedText>
-                    </View>
+                  <ThemedText type="title">{barber.name}</ThemedText>
+                  {barber.title ? (
+                    <ThemedText type="caption" muted>
+                      {barber.title}
+                    </ThemedText>
                   ) : null}
                 </View>
               </View>
@@ -105,12 +96,6 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
     gap: 2,
-  },
-  location: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    marginTop: 2,
   },
   bio: {
     marginTop: Spacing.md,

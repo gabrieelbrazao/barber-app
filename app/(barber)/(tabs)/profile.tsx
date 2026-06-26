@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Button, Card, Divider, ErrorState, Loading, Screen, ScreenHeader, TextField } from '@/components/ui';
+import { Button, Card, Divider, ErrorState, Loading, Screen, ScreenHeader, TextField, ThemeModeToggle } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import type { WorkingHours } from '@/lib/database.types';
@@ -60,28 +60,25 @@ export default function BarberProfileScreen() {
   const barberId = profile?.id ?? '';
   const barberQ = useBarber(barberId);
 
-  const [shopName, setShopName] = useState<string | null>(null);
-  const [location, setLocation] = useState<string | null>(null);
+  const [title, setTitle] = useState<string | null>(null);
   const [bio, setBio] = useState<string | null>(null);
   const [hours, setHours] = useState<WorkingHours | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Seed local state once the query resolves.
-  if (barberQ.data && shopName === null && hours === null) {
-    setShopName(barberQ.data.shopName ?? '');
-    setLocation(barberQ.data.location ?? '');
+  if (barberQ.data && title === null && hours === null) {
+    setTitle(barberQ.data.title ?? '');
     setBio(barberQ.data.bio ?? '');
     setHours(barberQ.data.workingHours ?? {});
   }
 
   if (barberQ.isLoading) return <Screen><Loading /></Screen>;
-  if (barberQ.isError) return <Screen><ErrorState message="Não foi possível carregar sua barbearia." /></Screen>;
+  if (barberQ.isError) return <Screen><ErrorState message="Não foi possível carregar seu perfil." /></Screen>;
 
   const saved = barberQ.data;
   const dirty =
     !!saved &&
-    ((shopName ?? '') !== (saved.shopName ?? '') ||
-      (location ?? '') !== (saved.location ?? '') ||
+    ((title ?? '') !== (saved.title ?? '') ||
       (bio ?? '') !== (saved.bio ?? '') ||
       JSON.stringify(hours ?? {}) !== JSON.stringify(saved.workingHours ?? {}));
 
@@ -122,8 +119,7 @@ export default function BarberProfileScreen() {
       const { error: bErr } = await supabase
         .from('barber_profiles')
         .update({
-          shop_name: shopName?.trim() || null,
-          location: location?.trim() || null,
+          title: title?.trim() || null,
           bio: bio?.trim() || null,
           working_hours: hours ?? {},
         })
@@ -134,7 +130,7 @@ export default function BarberProfileScreen() {
       qc.invalidateQueries({ queryKey: qk.barber(profile.id) });
       qc.invalidateQueries({ queryKey: qk.barbers });
       hapticSuccess();
-      Alert.alert('Salvo', 'Os dados da sua barbearia foram atualizados.');
+      Alert.alert('Salvo', 'Seu perfil foi atualizado.');
     } catch (e) {
       hapticError();
       Alert.alert('Não foi possível salvar', toUserMessage(e));
@@ -149,11 +145,15 @@ export default function BarberProfileScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <ScreenHeader title="Perfil da barbearia" />
+        <ScreenHeader title="Meu perfil" />
 
         <View style={styles.form}>
-          <TextField label="Nome da barbearia" value={shopName ?? ''} onChangeText={setShopName} />
-          <TextField label="Localização" value={location ?? ''} onChangeText={setLocation} placeholder="Bairro / cidade" />
+          <TextField
+            label="Cargo"
+            value={title ?? ''}
+            onChangeText={setTitle}
+            placeholder="Ex.: Barbeiro Sênior"
+          />
           <TextField
             label="Bio"
             value={bio ?? ''}
@@ -197,13 +197,15 @@ export default function BarberProfileScreen() {
         </Card>
 
         <Button
-          title={dirty ? 'Salvar barbearia' : 'Tudo salvo'}
+          title={dirty ? 'Salvar perfil' : 'Tudo salvo'}
           fullWidth
           loading={saving}
           disabled={!dirty}
           onPress={onSave}
         />
 
+        <Divider spacing={Spacing.sm} />
+        <ThemeModeToggle />
         <Divider spacing={Spacing.sm} />
         <Button title="Sair" variant="ghost" fullWidth onPress={onSignOut} />
         </ScrollView>

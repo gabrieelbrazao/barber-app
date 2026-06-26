@@ -1,62 +1,64 @@
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
+import { ThemedText } from '@/components/themed-text';
 import {
+  BannerCarousel,
   BarberCard,
   BarberListSkeleton,
   EmptyState,
   ErrorState,
-  Icon,
   Screen,
   ScreenHeader,
-  TextField,
 } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
-import { useBarbers } from '@/lib/queries';
+import { Radius, Spacing } from '@/constants/theme';
+import { useBanners, useBarbers, useShopBranding } from '@/lib/queries';
 import { useColors } from '@/hooks/use-colors';
 
-export default function BrowseScreen() {
+export default function ShopHomeScreen() {
   const c = useColors();
   const router = useRouter();
   const { data: barbers, isLoading, isError, refetch, isRefetching } = useBarbers();
-  const [search, setSearch] = useState('');
-
-  const q = search.trim().toLowerCase();
-  const filtered = (barbers ?? []).filter((b) =>
-    !q
-      ? true
-      : (b.shopName ?? '').toLowerCase().includes(q) ||
-        b.name.toLowerCase().includes(q) ||
-        (b.location ?? '').toLowerCase().includes(q)
-  );
+  const branding = useShopBranding();
+  const { data: banners } = useBanners();
 
   return (
     <Screen>
       <FlatList
-        data={filtered}
+        data={barbers ?? []}
         keyExtractor={(b) => b.id}
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={c.accent} />
         }
         ListHeaderComponent={
-          <>
-            <ScreenHeader title="Encontre um barbeiro" subtitle="Agende seu próximo corte" />
-            <TextField
-              placeholder="Buscar barbearias ou barbeiros"
-              value={search}
-              onChangeText={setSearch}
-              left={<Icon name="search" size={18} color={c.textMuted} />}
-              autoCapitalize="none"
-            />
-          </>
+          <View style={styles.header}>
+            <View style={styles.brandRow}>
+              {branding.data?.logo_url ? (
+                <Image
+                  source={{ uri: branding.data.logo_url }}
+                  style={[styles.logo, { backgroundColor: c.surfaceAlt }]}
+                  contentFit="cover"
+                />
+              ) : null}
+              <View style={styles.brandTitle}>
+                <ScreenHeader
+                  title={branding.data?.name ?? 'Barbearia'}
+                  subtitle="Escolha um profissional e agende"
+                />
+              </View>
+            </View>
+            <BannerCarousel banners={banners ?? []} />
+            <ThemedText type="subtitle" style={styles.staffTitle}>
+              Profissionais
+            </ThemedText>
+          </View>
         }
         renderItem={({ item }) => (
           <BarberCard
             name={item.name}
-            shopName={item.shopName}
-            location={item.location}
+            title={item.title}
             avatarUrl={item.avatarUrl}
             onPress={() => router.push(`/barber/${item.id}`)}
           />
@@ -65,9 +67,13 @@ export default function BrowseScreen() {
           isLoading ? (
             <BarberListSkeleton />
           ) : isError ? (
-            <ErrorState message="Não foi possível carregar os barbeiros." />
+            <ErrorState message="Não foi possível carregar os profissionais." />
           ) : (
-            <EmptyState icon="cut-outline" title="Nenhum barbeiro encontrado" message="Tente uma busca diferente." />
+            <EmptyState
+              icon="cut-outline"
+              title="Nenhum profissional ainda"
+              message="Volte em breve."
+            />
           )
         }
       />
@@ -80,5 +86,24 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.md,
     flexGrow: 1,
+  },
+  header: {
+    gap: Spacing.lg,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  logo: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.md,
+  },
+  brandTitle: {
+    flex: 1,
+  },
+  staffTitle: {
+    marginTop: Spacing.sm,
   },
 });

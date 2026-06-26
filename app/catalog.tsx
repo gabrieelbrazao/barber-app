@@ -118,8 +118,7 @@ export default function CatalogScreen() {
         <Section title="Componentes de domínio">
           <BarberCard
             name="Marcos Cole"
-            shopName="Navalha de Ouro"
-            location="Centro"
+            title="Barbeiro Sênior"
             rating={4.8}
             reviewCount={212}
             onPress={() => {}}

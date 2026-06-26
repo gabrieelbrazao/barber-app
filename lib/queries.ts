@@ -3,10 +3,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   Appointment,
   AppointmentStatus,
+  Banner,
   BarberProfile,
+  BrandColors,
   Service,
+  Shop,
+  ShopBranding,
   WorkingHours,
 } from '@/lib/database.types';
+import { SHOP_ID } from '@/lib/config';
 import { AppError } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 
@@ -17,8 +22,7 @@ import { supabase } from '@/lib/supabase';
 export type BarberListItem = {
   id: string;
   name: string;
-  shopName: string | null;
-  location: string | null;
+  title: string | null;
   avatarUrl: string | null;
 };
 
@@ -45,6 +49,9 @@ export const qk = {
   barbers: ['barbers'] as const,
   barber: (id: string) => ['barber', id] as const,
   services: (barberId: string) => ['services', barberId] as const,
+  shop: ['shop', SHOP_ID] as const,
+  shopBranding: ['shop', 'branding', SHOP_ID] as const,
+  banners: ['banners', SHOP_ID] as const,
   myAppointments: (uid: string) => ['appointments', 'customer', uid] as const,
   barberAppointments: (uid: string) => ['appointments', 'barber', uid] as const,
   dayAppointments: (barberId: string, dayISO: string) =>
@@ -52,10 +59,63 @@ export const qk = {
 };
 
 // ---------------------------------------------------------------------------
+// Shop & branding (this build's single shop, pinned by SHOP_ID)
+// ---------------------------------------------------------------------------
+
+/** Anon-readable branding (works before login) — feeds the theme + logo. */
+export function useShopBranding() {
+  return useQuery({
+    queryKey: qk.shopBranding,
+    queryFn: async (): Promise<ShopBranding> => {
+      const { data, error } = await supabase
+        .from('shop_public')
+        .select('id, name, logo_url, colors')
+        .eq('id', SHOP_ID)
+        .single();
+      if (error) throw error;
+      return data as ShopBranding;
+    },
+  });
+}
+
+/** Full shop row (members only) — used by the owner admin screen. */
+export function useShop() {
+  return useQuery({
+    queryKey: qk.shop,
+    queryFn: async (): Promise<Shop> => {
+      const { data, error } = await supabase
+        .from('shops')
+        .select('id, name, location, owner_id, logo_url, colors')
+        .eq('id', SHOP_ID)
+        .single();
+      if (error) throw error;
+      return data as Shop;
+    },
+  });
+}
+
+export function useBanners(includeInactive = false) {
+  return useQuery({
+    queryKey: [...qk.banners, { includeInactive }],
+    queryFn: async (): Promise<Banner[]> => {
+      let q = supabase
+        .from('banners')
+        .select('*')
+        .eq('shop_id', SHOP_ID)
+        .order('sort_order');
+      if (!includeInactive) q = q.eq('active', true);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data as Banner[];
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Barbers & services
 // ---------------------------------------------------------------------------
 
-type BarberRow = Pick<BarberProfile, 'id' | 'shop_name' | 'location' | 'bio' | 'working_hours'> & {
+type BarberRow = Pick<BarberProfile, 'id' | 'title' | 'bio' | 'working_hours'> & {
   profiles: { full_name: string | null; avatar_url: string | null } | null;
 };
 
@@ -63,22 +123,25 @@ function toBarberDetail(row: BarberRow): BarberDetail {
   return {
     id: row.id,
     name: row.profiles?.full_name ?? 'Barber',
-    shopName: row.shop_name,
-    location: row.location,
+    title: row.title,
     avatarUrl: row.profiles?.avatar_url ?? null,
     bio: row.bio,
     workingHours: row.working_hours,
   };
 }
 
+const BARBER_SELECT = 'id, title, bio, working_hours, profiles!inner(full_name, avatar_url)';
+
+/** This shop's staff (the build is pinned to one shop; RLS also enforces it). */
 export function useBarbers() {
   return useQuery({
     queryKey: qk.barbers,
     queryFn: async (): Promise<BarberListItem[]> => {
       const { data, error } = await supabase
         .from('barber_profiles')
-        .select('id, shop_name, location, bio, working_hours, profiles!inner(full_name, avatar_url)')
-        .order('shop_name');
+        .select(BARBER_SELECT)
+        .eq('shop_id', SHOP_ID)
+        .order('title', { nullsFirst: false });
       if (error) throw error;
       return (data as unknown as BarberRow[]).map(toBarberDetail);
     },
@@ -92,7 +155,7 @@ export function useBarber(id: string) {
     queryFn: async (): Promise<BarberDetail> => {
       const { data, error } = await supabase
         .from('barber_profiles')
-        .select('id, shop_name, location, bio, working_hours, profiles!inner(full_name, avatar_url)')
+        .select(BARBER_SELECT)
         .eq('id', id)
         .single();
       if (error) throw error;
@@ -217,6 +280,7 @@ export function useBookAppointment() {
         customer_id: input.customerId,
         barber_id: input.barberId,
         service_id: input.serviceId,
+        shop_id: SHOP_ID,
         start_time: input.start.toISOString(),
         end_time: input.end.toISOString(),
         status: 'pending',
@@ -284,6 +348,7 @@ export function useSaveService(barberId: string) {
     }) => {
       const payload = {
         barber_id: barberId,
+        shop_id: SHOP_ID,
         name: input.name,
         price_cents: input.priceCents,
         duration_minutes: input.durationMinutes,
@@ -307,5 +372,71 @@ export function useDeleteService(barberId: string) {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.services(barberId) }),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Owner-only: shop identity, branding & banners
+// ---------------------------------------------------------------------------
+
+export function useUpdateShop() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      name?: string | null;
+      location?: string | null;
+      logoUrl?: string | null;
+      colors?: BrandColors;
+    }) => {
+      const payload: Record<string, unknown> = {};
+      if (input.name !== undefined) payload.name = input.name;
+      if (input.location !== undefined) payload.location = input.location;
+      if (input.logoUrl !== undefined) payload.logo_url = input.logoUrl;
+      if (input.colors !== undefined) payload.colors = input.colors;
+      const { error } = await supabase.from('shops').update(payload).eq('id', SHOP_ID);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.shop });
+      qc.invalidateQueries({ queryKey: qk.shopBranding });
+    },
+  });
+}
+
+export function useSaveBanner() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id?: string;
+      imageUrl: string;
+      title?: string | null;
+      sortOrder?: number;
+      active?: boolean;
+    }) => {
+      const payload = {
+        shop_id: SHOP_ID,
+        image_url: input.imageUrl,
+        title: input.title ?? null,
+        sort_order: input.sortOrder ?? 0,
+        active: input.active ?? true,
+      };
+      const query = input.id
+        ? supabase.from('banners').update(payload).eq('id', input.id)
+        : supabase.from('banners').insert(payload);
+      const { error } = await query;
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.banners }),
+  });
+}
+
+export function useDeleteBanner() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (bannerId: string) => {
+      const { error } = await supabase.from('banners').delete().eq('id', bannerId);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.banners }),
   });
 }

@@ -1,6 +1,7 @@
 export { AppointmentCard } from './appointment-card';
 export { Avatar } from './avatar';
 export { Badge, StatusBadge } from './badge';
+export { BannerCarousel } from './banner-carousel';
 export { BarberCard } from './barber-card';
 export { Button } from './button';
 export { Card } from './card';
@@ -22,3 +23,4 @@ export {
 export { SlotButton } from './slot-button';
 export { Stars } from './stars';
 export { TextField } from './text-field';
+export { ThemeModeToggle } from './theme-mode-toggle';

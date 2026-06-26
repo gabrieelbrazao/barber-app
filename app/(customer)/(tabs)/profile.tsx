@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Avatar, Button, Card, Divider, Screen, ScreenHeader, TextField } from '@/components/ui';
+import { Avatar, Button, Card, Divider, Screen, ScreenHeader, TextField, ThemeModeToggle } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import { toUserMessage } from '@/lib/errors';
@@ -88,6 +88,8 @@ export default function CustomerProfileScreen() {
           />
         </View>
 
+        <Divider spacing={Spacing.sm} />
+        <ThemeModeToggle />
         <Divider spacing={Spacing.sm} />
         <Button title="Sair" variant="ghost" fullWidth onPress={onSignOut} />
         </ScrollView>
