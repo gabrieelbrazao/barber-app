@@ -1,5 +1,7 @@
-import { FlatList, StyleSheet, View } from 'react-native';
+import { useMemo } from 'react';
+import { RefreshControl, SectionList, StyleSheet, View } from 'react-native';
 
+import { ThemedText } from '@/components/themed-text';
 import {
   AppointmentCard,
   AppointmentListSkeleton,
@@ -11,14 +13,19 @@ import {
 } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
+import { splitByTime } from '@/lib/appointments';
 import type { AppointmentView } from '@/lib/queries';
 import { useBarberAppointments, useUpdateAppointmentStatus } from '@/lib/queries';
+import { useColors } from '@/hooks/use-colors';
 
 export default function BarberScheduleScreen() {
+  const c = useColors();
   const { profile } = useSession();
   const barberId = profile?.id ?? '';
-  const { data, isLoading, isError } = useBarberAppointments(barberId);
+  const { data, isLoading, isError, refetch, isRefetching } = useBarberAppointments(barberId);
   const update = useUpdateAppointmentStatus(barberId);
+
+  const sections = useMemo(() => splitByTime(data ?? []), [data]);
 
   function actionsFor(a: AppointmentView) {
     const set = (status: 'confirmed' | 'cancelled' | 'completed') =>
@@ -45,11 +52,20 @@ export default function BarberScheduleScreen() {
 
   return (
     <Screen>
-      <FlatList
-        data={data ?? []}
+      <SectionList
+        sections={sections}
         keyExtractor={(a) => a.id}
         contentContainerStyle={styles.content}
+        stickySectionHeadersEnabled={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={c.accent} />
+        }
         ListHeaderComponent={<ScreenHeader title="Agenda" subtitle="Seus próximos agendamentos" />}
+        renderSectionHeader={({ section }) => (
+          <ThemedText type="label" muted style={styles.sectionHeader}>
+            {section.title}
+          </ThemedText>
+        )}
         renderItem={({ item }) => {
           const actions = actionsFor(item);
           return (
@@ -85,6 +101,11 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.md,
     flexGrow: 1,
+  },
+  sectionHeader: {
+    marginTop: Spacing.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   actions: {
     flexDirection: 'row',

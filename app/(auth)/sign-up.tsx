@@ -4,8 +4,8 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } f
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { Button, Chip, TextField } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
+import { Button, Chip, Icon, IconButton, TextField } from '@/components/ui';
+import { Radius, Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import type { UserRole } from '@/lib/database.types';
 import { toUserMessage } from '@/lib/errors';
@@ -20,6 +20,7 @@ export default function SignUpScreen() {
   const [shopName, setShopName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -30,7 +31,7 @@ export default function SignUpScreen() {
     setSubmitting(true);
     try {
       const { needsConfirmation } = await signUp({
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         password,
         fullName: fullName.trim(),
         role,
@@ -93,12 +94,25 @@ export default function SignUpScreen() {
             <TextField
               label="Senha"
               placeholder="Pelo menos 6 caracteres"
-              secureTextEntry
+              secureTextEntry={!showPassword}
               autoComplete="new-password"
               value={password}
               onChangeText={setPassword}
-              error={error ?? undefined}
+              right={
+                <IconButton
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  color={c.textMuted}
+                  accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  onPress={() => setShowPassword((s) => !s)}
+                />
+              }
             />
+            {error ? (
+              <View style={[styles.errorBanner, { backgroundColor: c.surfaceAlt, borderColor: c.cancelled }]}>
+                <Icon name="alert-circle-outline" size={18} color={c.cancelled} />
+                <ThemedText style={{ color: c.cancelled, flex: 1 }}>{error}</ThemedText>
+              </View>
+            ) : null}
             <Button
               title="Criar conta"
               fullWidth
@@ -141,6 +155,14 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: Spacing.lg,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   footer: {
     flexDirection: 'row',

@@ -1,7 +1,17 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, Divider, ErrorState, Loading, Screen, ScreenHeader, TextField } from '@/components/ui';
@@ -9,6 +19,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import type { WorkingHours } from '@/lib/database.types';
 import { toUserMessage } from '@/lib/errors';
+import { hapticError, hapticSuccess } from '@/lib/haptics';
 import { qk, useBarber } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 import { useColors } from '@/hooks/use-colors';
@@ -122,8 +133,10 @@ export default function BarberProfileScreen() {
       await refreshProfile();
       qc.invalidateQueries({ queryKey: qk.barber(profile.id) });
       qc.invalidateQueries({ queryKey: qk.barbers });
+      hapticSuccess();
       Alert.alert('Salvo', 'Os dados da sua barbearia foram atualizados.');
     } catch (e) {
+      hapticError();
       Alert.alert('Não foi possível salvar', toUserMessage(e));
     } finally {
       setSaving(false);
@@ -132,7 +145,10 @@ export default function BarberProfileScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ScreenHeader title="Perfil da barbearia" />
 
         <View style={styles.form}>
@@ -190,7 +206,8 @@ export default function BarberProfileScreen() {
 
         <Divider spacing={Spacing.sm} />
         <Button title="Sair" variant="ghost" fullWidth onPress={onSignOut} />
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
@@ -254,6 +271,7 @@ function TimeField({ value, onChange }: { value: string; onChange: (t: string) =
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   content: {
     padding: Spacing.lg,
     gap: Spacing.lg,

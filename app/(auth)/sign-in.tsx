@@ -4,8 +4,8 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { Button, Icon, TextField } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
+import { Button, Icon, IconButton, TextField } from '@/components/ui';
+import { Radius, Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import { toUserMessage } from '@/lib/errors';
 import { useColors } from '@/hooks/use-colors';
@@ -16,6 +16,7 @@ export default function SignInScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -23,7 +24,7 @@ export default function SignInScreen() {
     setError(null);
     setSubmitting(true);
     try {
-      await signIn(email.trim(), password);
+      await signIn(email.trim().toLowerCase(), password);
       // The root guard swaps the navigator to the role's tabs automatically.
     } catch (e) {
       setError(toUserMessage(e, 'Não foi possível entrar.'));
@@ -57,12 +58,25 @@ export default function SignInScreen() {
             <TextField
               label="Senha"
               placeholder="••••••••"
-              secureTextEntry
+              secureTextEntry={!showPassword}
               autoComplete="current-password"
               value={password}
               onChangeText={setPassword}
-              error={error ?? undefined}
+              right={
+                <IconButton
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  color={c.textMuted}
+                  accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  onPress={() => setShowPassword((s) => !s)}
+                />
+              }
             />
+            {error ? (
+              <View style={[styles.errorBanner, { backgroundColor: c.surfaceAlt, borderColor: c.cancelled }]}>
+                <Icon name="alert-circle-outline" size={18} color={c.cancelled} />
+                <ThemedText style={{ color: c.cancelled, flex: 1 }}>{error}</ThemedText>
+              </View>
+            ) : null}
             <Button
               title="Entrar"
               fullWidth
@@ -99,6 +113,14 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: Spacing.lg,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   footer: {
     flexDirection: 'row',

@@ -10,9 +10,11 @@ export type TextFieldProps = TextInputProps & {
   error?: string;
   /** Optional leading element (e.g. an icon). */
   left?: React.ReactNode;
+  /** Optional trailing element (e.g. a password visibility toggle). */
+  right?: React.ReactNode;
 };
 
-export function TextField({ label, error, left, style, onFocus, onBlur, ...rest }: TextFieldProps) {
+export function TextField({ label, error, left, right, style, onFocus, onBlur, ...rest }: TextFieldProps) {
   const c = useColors();
   const [focused, setFocused] = useState(false);
 
@@ -44,6 +46,7 @@ export function TextField({ label, error, left, style, onFocus, onBlur, ...rest 
           }}
           {...rest}
         />
+        {right}
       </View>
       {error ? (
         <ThemedText type="caption" style={[styles.error, { color: c.cancelled }]}>

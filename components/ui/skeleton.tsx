@@ -76,9 +76,50 @@ export function AppointmentListSkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
+/** Placeholder rows mimicking a list of ServiceCards while services load. */
+export function ServiceListSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <View style={styles.list}>
+      {Array.from({ length: count }).map((_, i) => (
+        <Card key={i}>
+          <View style={styles.spread}>
+            <View style={styles.lines}>
+              <Skeleton width="50%" height={16} />
+              <Skeleton width="30%" height={12} />
+            </View>
+            <Skeleton width={72} height={32} radius={Radius.md} />
+          </View>
+        </Card>
+      ))}
+    </View>
+  );
+}
+
+/** Placeholder grid mimicking time slots while availability loads. */
+export function SlotsSkeleton({ count = 12 }: { count?: number }) {
+  return (
+    <View style={styles.slots}>
+      {Array.from({ length: count }).map((_, i) => (
+        <Skeleton key={i} width={72} height={40} radius={Radius.md} />
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   list: {
     gap: Spacing.md,
+  },
+  spread: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+  },
+  slots: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
   },
   row: {
     flexDirection: 'row',

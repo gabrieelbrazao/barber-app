@@ -11,6 +11,7 @@ import {
   Loading,
   Screen,
   ServiceCard,
+  ServiceListSkeleton,
 } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useBarber, useServices } from '@/lib/queries';
@@ -78,7 +79,7 @@ export default function BarberDetailScreen() {
         )}
         ListEmptyComponent={
           servicesQ.isLoading ? (
-            <Loading />
+            <ServiceListSkeleton />
           ) : (
             <EmptyState icon="cut-outline" title="Nenhum serviço ainda" />
           )

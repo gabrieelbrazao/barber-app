@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Avatar, Button, Card, Divider, Screen, ScreenHeader, TextField } from '@/components/ui';
@@ -7,6 +7,7 @@ import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import { toUserMessage } from '@/lib/errors';
 import { maskPhoneBR } from '@/lib/format';
+import { hapticError, hapticSuccess } from '@/lib/haptics';
 import { supabase } from '@/lib/supabase';
 
 export default function CustomerProfileScreen() {
@@ -36,8 +37,10 @@ export default function CustomerProfileScreen() {
         .eq('id', profile.id);
       if (error) throw error;
       await refreshProfile();
+      hapticSuccess();
       Alert.alert('Salvo', 'Seu perfil foi atualizado.');
     } catch (e) {
+      hapticError();
       Alert.alert('Não foi possível salvar', toUserMessage(e));
     } finally {
       setSaving(false);
@@ -46,7 +49,10 @@ export default function CustomerProfileScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ScreenHeader title="Perfil" />
 
         <Card>
@@ -84,12 +90,14 @@ export default function CustomerProfileScreen() {
 
         <Divider spacing={Spacing.sm} />
         <Button title="Sair" variant="ghost" fullWidth onPress={onSignOut} />
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   content: {
     padding: Spacing.lg,
     gap: Spacing.lg,

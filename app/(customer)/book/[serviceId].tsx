@@ -12,12 +12,14 @@ import {
   Loading,
   Screen,
   SlotButton,
+  SlotsSkeleton,
 } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import { generateSlots } from '@/lib/availability';
 import { toUserMessage } from '@/lib/errors';
 import { formatDuration, formatPrice, formatTime } from '@/lib/format';
+import { hapticError, hapticSuccess } from '@/lib/haptics';
 import { useBarber, useBookAppointment, useDayAppointments, useServices } from '@/lib/queries';
 
 const DAYS_AHEAD = 14;
@@ -30,6 +32,12 @@ function nextDays(count: number): Date[] {
     d.setDate(d.getDate() + i);
     return d;
   });
+}
+
+function dayChipLabel(d: Date, index: number): string {
+  if (index === 0) return 'Hoje';
+  if (index === 1) return 'Amanhã';
+  return d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' });
 }
 
 export default function BookScreen() {
@@ -68,9 +76,11 @@ export default function BookScreen() {
         start: selected,
         end,
       });
+      hapticSuccess();
       Alert.alert('Agendado!', 'Sua solicitação de agendamento foi enviada.');
       router.replace('/appointments');
     } catch (e) {
+      hapticError();
       Alert.alert('Não foi possível agendar', toUserMessage(e));
     }
   }
@@ -90,10 +100,10 @@ export default function BookScreen() {
             DATA
           </ThemedText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.days}>
-            {days.map((d) => (
+            {days.map((d, i) => (
               <Chip
                 key={d.toISOString()}
-                label={d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' })}
+                label={dayChipLabel(d, i)}
                 selected={d.toDateString() === day.toDateString()}
                 onPress={() => {
                   setDay(d);
@@ -109,7 +119,7 @@ export default function BookScreen() {
             HORÁRIO
           </ThemedText>
           {dayApptsQ.isLoading ? (
-            <Loading />
+            <SlotsSkeleton />
           ) : slots.length === 0 ? (
             <EmptyState icon="moon-outline" title="Fechado neste dia" message="Escolha outra data." />
           ) : (

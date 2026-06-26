@@ -1,12 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button, Screen, TextField } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import { toUserMessage } from '@/lib/errors';
+import { hapticError, hapticSuccess } from '@/lib/haptics';
 import { useSaveService, useServices } from '@/lib/queries';
 import { useColors } from '@/hooks/use-colors';
 
@@ -41,15 +42,20 @@ export default function EditServiceScreen() {
         durationMinutes,
         active,
       });
+      hapticSuccess();
       router.back();
     } catch (e) {
+      hapticError();
       Alert.alert('Não foi possível salvar', toUserMessage(e));
     }
   }
 
   return (
     <Screen edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ThemedText type="title">{serviceId ? 'Editar serviço' : 'Novo serviço'}</ThemedText>
 
         <TextField label="Nome" placeholder="Corte Clássico" value={name} onChangeText={setName} />
@@ -90,7 +96,8 @@ export default function EditServiceScreen() {
           loading={save.isPending}
           onPress={onSave}
         />
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
@@ -103,6 +110,7 @@ function maskCurrency(input: string): string {
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   content: {
     padding: Spacing.lg,
     gap: Spacing.lg,

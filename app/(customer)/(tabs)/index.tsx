@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet } from 'react-native';
 
 import {
   BarberCard,
@@ -19,7 +19,7 @@ import { useColors } from '@/hooks/use-colors';
 export default function BrowseScreen() {
   const c = useColors();
   const router = useRouter();
-  const { data: barbers, isLoading, isError } = useBarbers();
+  const { data: barbers, isLoading, isError, refetch, isRefetching } = useBarbers();
   const [search, setSearch] = useState('');
 
   const q = search.trim().toLowerCase();
@@ -37,6 +37,9 @@ export default function BrowseScreen() {
         data={filtered}
         keyExtractor={(b) => b.id}
         contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={c.accent} />
+        }
         ListHeaderComponent={
           <>
             <ScreenHeader title="Encontre um barbeiro" subtitle="Agende seu próximo corte" />

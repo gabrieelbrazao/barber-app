@@ -1,15 +1,15 @@
 import { useRouter } from 'expo-router';
-import { Alert, FlatList, StyleSheet, View } from 'react-native';
+import { Alert, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
 import {
   Button,
   EmptyState,
   ErrorState,
   IconButton,
-  Loading,
   Screen,
   ScreenHeader,
   ServiceCard,
+  ServiceListSkeleton,
 } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
@@ -21,7 +21,7 @@ export default function BarberServicesScreen() {
   const router = useRouter();
   const { profile } = useSession();
   const barberId = profile?.id ?? '';
-  const { data, isLoading, isError } = useServices(barberId, true);
+  const { data, isLoading, isError, refetch, isRefetching } = useServices(barberId, true);
   const del = useDeleteService(barberId);
 
   function onDelete(id: string, name: string) {
@@ -37,6 +37,9 @@ export default function BarberServicesScreen() {
         data={data ?? []}
         keyExtractor={(s) => s.id}
         contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={c.accent} />
+        }
         ListHeaderComponent={
           <ScreenHeader
             title="Serviços"
@@ -79,7 +82,7 @@ export default function BarberServicesScreen() {
         )}
         ListEmptyComponent={
           isLoading ? (
-            <Loading />
+            <ServiceListSkeleton />
           ) : isError ? (
             <ErrorState message="Não foi possível carregar seus serviços." />
           ) : (
