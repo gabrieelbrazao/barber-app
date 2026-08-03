@@ -4,7 +4,7 @@
 -- mutate shop/banners, and that shop_public is anon-readable for branding.
 
 begin;
-select plan(13);
+select plan(18);
 
 -- Shop ids
 -- C: cccccccc-cccc-cccc-cccc-cccccccccccc
@@ -68,6 +68,35 @@ insert into public.banners (shop_id, image_url, sort_order) values
   ('cccccccc-cccc-cccc-cccc-cccccccccccc','c-2',1),
   ('dddddddd-dddd-dddd-dddd-dddddddddddd','d-1',0);
 
+-- New-feature rows: one per shop, to prove tenant isolation extends to them.
+insert into public.reviews (shop_id, appointment_id, customer_id, barber_id, rating)
+select 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+       (select id from public.appointments where shop_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc' limit 1),
+       'c0000000-0000-0000-0000-000000000000','c1111111-1111-1111-1111-111111111111', 5;
+insert into public.reviews (shop_id, appointment_id, customer_id, barber_id, rating)
+select 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+       (select id from public.appointments where shop_id = 'dddddddd-dddd-dddd-dddd-dddddddddddd' limit 1),
+       'd0000000-0000-0000-0000-000000000000','d1111111-1111-1111-1111-111111111111', 4;
+
+insert into public.time_off (shop_id, barber_id, starts_at, ends_at) values
+  ('cccccccc-cccc-cccc-cccc-cccccccccccc','c1111111-1111-1111-1111-111111111111', now() + interval '1 day', now() + interval '1 day 1 hour'),
+  ('dddddddd-dddd-dddd-dddd-dddddddddddd','d1111111-1111-1111-1111-111111111111', now() + interval '1 day', now() + interval '1 day 1 hour');
+
+insert into public.promo_codes (shop_id, code, kind, value) values
+  ('cccccccc-cccc-cccc-cccc-cccccccccccc','CWELCOME','percent',10),
+  ('dddddddd-dddd-dddd-dddd-dddddddddddd','DWELCOME','percent',10);
+
+insert into public.portfolio_images (shop_id, barber_id, image_url) values
+  ('cccccccc-cccc-cccc-cccc-cccccccccccc','c1111111-1111-1111-1111-111111111111','c-p1'),
+  ('dddddddd-dddd-dddd-dddd-dddddddddddd','d1111111-1111-1111-1111-111111111111','d-p1');
+
+insert into public.waitlist (shop_id, customer_id, barber_id, service_id, desired_date)
+select 'cccccccc-cccc-cccc-cccc-cccccccccccc','c0000000-0000-0000-0000-000000000000','c1111111-1111-1111-1111-111111111111',
+       (select id from public.services where name = 'C1'), current_date + 1;
+insert into public.waitlist (shop_id, customer_id, barber_id, service_id, desired_date)
+select 'dddddddd-dddd-dddd-dddd-dddddddddddd','d0000000-0000-0000-0000-000000000000','d1111111-1111-1111-1111-111111111111',
+       (select id from public.services where name = 'D1'), current_date + 1;
+
 -- ---- As Shop C customer -------------------------------------------------
 set local role authenticated;
 set local "request.jwt.claims" to '{"sub":"c0000000-0000-0000-0000-000000000000","role":"authenticated"}';
@@ -80,6 +109,13 @@ select is((select count(*) from public.banners)::int, 2, 'C customer sees only s
 select is((select count(*) from public.shops)::int, 1, 'C customer sees only its own shop row');
 select is((select count(*) from public.profiles where shop_id = 'dddddddd-dddd-dddd-dddd-dddddddddddd')::int,
           0, 'C customer cannot see shop D profiles');
+
+-- New tenant tables are isolated too.
+select is((select count(*) from public.reviews)::int, 1, 'C customer sees only shop C reviews');
+select is((select count(*) from public.time_off)::int, 1, 'C customer sees only shop C time-off');
+select is((select count(*) from public.promo_codes)::int, 1, 'C customer sees only shop C promo codes');
+select is((select count(*) from public.portfolio_images)::int, 1, 'C customer sees only shop C portfolio');
+select is((select count(*) from public.waitlist)::int, 1, 'C customer sees only own waitlist entry');
 
 -- ---- As Shop D customer -------------------------------------------------
 set local "request.jwt.claims" to '{"sub":"d0000000-0000-0000-0000-000000000000","role":"authenticated"}';

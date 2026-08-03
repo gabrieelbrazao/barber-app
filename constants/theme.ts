@@ -62,6 +62,8 @@ export const StatusColorName = {
   confirmed: 'confirmed',
   cancelled: 'cancelled',
   completed: 'completed',
+  // No-show reuses the "cancelled" (negative) color — it's a missed booking.
+  no_show: 'cancelled',
 } as const satisfies Record<string, ColorName>;
 
 export const Spacing = {

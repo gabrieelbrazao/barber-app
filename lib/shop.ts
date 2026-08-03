@@ -18,3 +18,9 @@ export function logoObjectPath(shopId: string): string {
 export function bannerObjectPath(shopId: string, bannerId: string): string {
   return `${shopId}/banners/${bannerId}`;
 }
+
+// Portfolio objects live under `<shopId>/<barberId>/...` so storage RLS can scope
+// writes to the owning barber within their shop.
+export function portfolioObjectPath(shopId: string, barberId: string, key: string): string {
+  return `${shopId}/${barberId}/${key}`;
+}

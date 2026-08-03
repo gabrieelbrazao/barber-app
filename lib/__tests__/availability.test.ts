@@ -27,11 +27,11 @@ describe('generateSlots', () => {
     const closed: WorkingHours = { ...OPEN_ALL_DAYS };
     closed[['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][DAY.getDay()] as keyof WorkingHours] =
       null;
-    expect(generateSlots(DAY, closed, 60, [], PAST)).toEqual([]);
+    expect(generateSlots(DAY, closed, 60, [], [], PAST)).toEqual([]);
   });
 
   it('emits 30-min-granularity start slots that fit before closing', () => {
-    const slots = generateSlots(DAY, OPEN_ALL_DAYS, 60, [], PAST);
+    const slots = generateSlots(DAY, OPEN_ALL_DAYS, 60, [], [], PAST);
     // 09:00..11:00 in 30-min steps (11:00+60min == 12:00 close); 11:30 would overrun.
     expect(slots.map((s) => s.start.getTime())).toEqual([
       at(9, 0).getTime(),
@@ -45,7 +45,7 @@ describe('generateSlots', () => {
 
   it('marks slots overlapping a booking as unavailable', () => {
     const booked = [{ start: at(10, 0).toISOString(), end: at(10, 30).toISOString() }];
-    const slots = generateSlots(DAY, OPEN_ALL_DAYS, 60, booked, PAST);
+    const slots = generateSlots(DAY, OPEN_ALL_DAYS, 60, booked, [], PAST);
     const byStart = (h: number, m = 0) =>
       slots.find((s) => s.start.getTime() === at(h, m).getTime())!;
     expect(byStart(9, 0).available).toBe(true); // 09:00–10:00 ends exactly at booking start
@@ -55,10 +55,20 @@ describe('generateSlots', () => {
 
   it('marks past slots as unavailable', () => {
     const now = at(10, 0);
-    const slots = generateSlots(DAY, OPEN_ALL_DAYS, 60, [], now);
+    const slots = generateSlots(DAY, OPEN_ALL_DAYS, 60, [], [], now);
     const byStart = (h: number, m = 0) =>
       slots.find((s) => s.start.getTime() === at(h, m).getTime())!;
     expect(byStart(9, 0).available).toBe(false);
     expect(byStart(10, 30).available).toBe(true);
+  });
+
+  it('marks slots overlapping a time-off block as unavailable', () => {
+    const blocked = [{ start: at(9, 30).toISOString(), end: at(10, 30).toISOString() }];
+    const slots = generateSlots(DAY, OPEN_ALL_DAYS, 60, [], blocked, PAST);
+    const byStart = (h: number, m = 0) =>
+      slots.find((s) => s.start.getTime() === at(h, m).getTime())!;
+    expect(byStart(9, 0).available).toBe(false); // 09:00–10:00 overlaps the block
+    expect(byStart(9, 30).available).toBe(false); // inside the block
+    expect(byStart(10, 30).available).toBe(true); // 10:30–11:30 is clear
   });
 });

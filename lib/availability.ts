@@ -25,14 +25,16 @@ function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
 
 /**
  * Build selectable start slots for `day`, given the barber's working hours, the service
- * duration, and the day's existing (non-cancelled) appointments. Slots whose end runs past
- * closing, overlap a booking, or are already in the past are marked `available: false`.
+ * duration, the day's existing (non-cancelled) appointments, and any time-off `blocked`
+ * ranges. Slots whose end runs past closing, overlap a booking or a block, or are already
+ * in the past are marked `available: false`.
  */
 export function generateSlots(
   day: Date,
   workingHours: WorkingHours,
   durationMinutes: number,
   booked: BookedRange[],
+  blocked: BookedRange[] = [],
   now: Date = new Date()
 ): Slot[] {
   const key = WEEKDAY_KEYS[day.getDay()];
@@ -42,7 +44,8 @@ export function generateSlots(
   const [open, close] = hours;
   const openAt = parseHHmm(day, open);
   const closeAt = parseHHmm(day, close);
-  const bookedRanges = booked.map((b) => ({ start: new Date(b.start), end: new Date(b.end) }));
+  const toRanges = (rs: BookedRange[]) => rs.map((b) => ({ start: new Date(b.start), end: new Date(b.end) }));
+  const busy = [...toRanges(booked), ...toRanges(blocked)];
 
   const slots: Slot[] = [];
   for (
@@ -52,7 +55,7 @@ export function generateSlots(
   ) {
     const end = new Date(start.getTime() + durationMinutes * 60_000);
     const inPast = start <= now;
-    const collides = bookedRanges.some((r) => overlaps(start, end, r.start, r.end));
+    const collides = busy.some((r) => overlaps(start, end, r.start, r.end));
     slots.push({ start: new Date(start), end, available: !inPast && !collides });
   }
   return slots;

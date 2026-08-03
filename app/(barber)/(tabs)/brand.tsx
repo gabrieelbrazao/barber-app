@@ -32,13 +32,17 @@ import {
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { HEX_COLOR, OVERRIDABLE_TOKENS, mergeBranding, type Scheme } from '@/lib/branding';
 import { SHOP_ID } from '@/lib/config';
-import type { Banner, BrandColors } from '@/lib/database.types';
+import type { Banner, BrandColors, PromoCode } from '@/lib/database.types';
 import { toUserMessage } from '@/lib/errors';
+import { formatPrice } from '@/lib/format';
 import { hapticError, hapticSuccess } from '@/lib/haptics';
 import {
   useBanners,
   useDeleteBanner,
+  useDeletePromo,
+  usePromoCodes,
   useSaveBanner,
+  useSavePromo,
   useShop,
   useUpdateShop,
 } from '@/lib/queries';
@@ -343,6 +347,11 @@ export default function BrandScreen() {
 
           {/* Banners */}
           <BannersManager banners={bannersQ.data ?? []} loading={bannersQ.isLoading} />
+
+          <Divider spacing={Spacing.sm} />
+
+          {/* Promo codes */}
+          <PromoManager />
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -444,8 +453,108 @@ function BannersManager({ banners, loading }: { banners: Banner[]; loading: bool
   );
 }
 
+function PromoManager() {
+  const c = useColors();
+  const promosQ = usePromoCodes();
+  const save = useSavePromo();
+  const del = useDeletePromo();
+  const [code, setCode] = useState('');
+  const [kind, setKind] = useState<'percent' | 'amount'>('percent');
+  const [value, setValue] = useState('');
+
+  async function onAdd() {
+    const v = parseInt(value, 10);
+    if (!code.trim() || !v || v <= 0) {
+      Alert.alert('Dados incompletos', 'Informe um código e um valor maior que zero.');
+      return;
+    }
+    try {
+      await save.mutateAsync({ code, kind, value: v });
+      setCode('');
+      setValue('');
+      hapticSuccess();
+    } catch (e) {
+      hapticError();
+      Alert.alert('Não foi possível salvar', toUserMessage(e));
+    }
+  }
+
+  const describe = (p: PromoCode) =>
+    p.kind === 'percent' ? `${p.value}% de desconto` : `${formatPrice(p.value * 100)} de desconto`;
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="subtitle">Cupons</ThemedText>
+
+      <View style={styles.promoForm}>
+        <TextField
+          label="Código"
+          value={code}
+          onChangeText={setCode}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          placeholder="BEMVINDO"
+        />
+        <View style={styles.schemeRow}>
+          <Chip label="Percentual" selected={kind === 'percent'} onPress={() => setKind('percent')} />
+          <Chip label="Valor fixo" selected={kind === 'amount'} onPress={() => setKind('amount')} />
+        </View>
+        <TextField
+          label={kind === 'percent' ? 'Percentual (%)' : 'Valor (R$)'}
+          value={value}
+          onChangeText={setValue}
+          keyboardType="number-pad"
+        />
+        <Button
+          title="Adicionar cupom"
+          variant="secondary"
+          size="sm"
+          loading={save.isPending}
+          onPress={onAdd}
+        />
+      </View>
+
+      {(promosQ.data?.length ?? 0) === 0 ? (
+        <EmptyState icon="pricetag-outline" title="Nenhum cupom" message="Crie cupons para suas promoções." />
+      ) : (
+        promosQ.data!.map((p) => (
+          <Card key={p.id}>
+            <View style={styles.bannerRow}>
+              <View style={styles.flex}>
+                <ThemedText type="label">{p.code}</ThemedText>
+                <ThemedText type="caption" muted>
+                  {describe(p)}
+                  {p.active ? '' : ' · inativo'}
+                </ThemedText>
+              </View>
+              <View style={styles.bannerToggle}>
+                <Switch
+                  value={p.active}
+                  onValueChange={(active) =>
+                    save.mutate({ id: p.id, code: p.code, kind: p.kind, value: p.value, active })
+                  }
+                  trackColor={{ true: c.accent, false: c.border }}
+                />
+                <IconButton
+                  name="trash-outline"
+                  color={c.cancelled}
+                  accessibilityLabel="Excluir cupom"
+                  onPress={() => del.mutate(p.id)}
+                />
+              </View>
+            </View>
+          </Card>
+        ))
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  promoForm: {
+    gap: Spacing.md,
+  },
   content: {
     padding: Spacing.lg,
     gap: Spacing.lg,

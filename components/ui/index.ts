@@ -21,6 +21,6 @@ export {
   SlotsSkeleton,
 } from './skeleton';
 export { SlotButton } from './slot-button';
-export { Stars } from './stars';
+export { Stars, StarInput } from './stars';
 export { TextField } from './text-field';
 export { ThemeModeToggle } from './theme-mode-toggle';

@@ -13,6 +13,7 @@ import {
   Screen,
   SlotButton,
   SlotsSkeleton,
+  TextField,
 } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
@@ -20,7 +21,18 @@ import { generateSlots } from '@/lib/availability';
 import { toUserMessage } from '@/lib/errors';
 import { formatDuration, formatPrice, formatTime } from '@/lib/format';
 import { hapticError, hapticSuccess } from '@/lib/haptics';
-import { useBarber, useBookAppointment, useDayAppointments, useServices } from '@/lib/queries';
+import { scheduleReminder } from '@/lib/notifications';
+import {
+  useBarber,
+  useBookAppointment,
+  useDayAppointments,
+  useDayBlocks,
+  useJoinWaitlist,
+  useRedeemPromo,
+  useServices,
+  type RedeemedPromo,
+} from '@/lib/queries';
+import { promoDiscountCents } from '@/lib/promo';
 
 const DAYS_AHEAD = 14;
 
@@ -48,34 +60,92 @@ export default function BookScreen() {
   const days = useMemo(() => nextDays(DAYS_AHEAD), []);
   const [day, setDay] = useState<Date>(days[0]);
   const [selected, setSelected] = useState<Date | null>(null);
+  const [promoText, setPromoText] = useState('');
+  const [promo, setPromo] = useState<RedeemedPromo | null>(null);
+  const redeem = useRedeemPromo();
 
   const barberQ = useBarber(barberId);
   const servicesQ = useServices(barberId);
   const dayApptsQ = useDayAppointments(barberId, day);
+  const dayBlocksQ = useDayBlocks(barberId, day);
   const book = useBookAppointment();
+  const joinWaitlist = useJoinWaitlist();
 
   const service = servicesQ.data?.find((s) => s.id === serviceId);
 
   const slots = useMemo(() => {
     if (!barberQ.data || !service) return [];
-    return generateSlots(day, barberQ.data.workingHours, service.duration_minutes, dayApptsQ.data ?? []);
-  }, [barberQ.data, service, day, dayApptsQ.data]);
+    return generateSlots(
+      day,
+      barberQ.data.workingHours,
+      service.duration_minutes,
+      dayApptsQ.data ?? [],
+      dayBlocksQ.data ?? []
+    );
+  }, [barberQ.data, service, day, dayApptsQ.data, dayBlocksQ.data]);
 
   if (barberQ.isLoading || servicesQ.isLoading) return <Screen><Loading /></Screen>;
   if (barberQ.isError || !service)
     return <Screen><ErrorState message="Não foi possível carregar os detalhes do agendamento." /></Screen>;
 
+  const discountCents =
+    service && promo ? promoDiscountCents(service.price_cents, promo.kind, promo.value) : 0;
+
+  const hasAvailable = slots.some((s) => s.available);
+
+  async function onJoinWaitlist() {
+    if (!profile) return;
+    try {
+      await joinWaitlist.mutateAsync({
+        customerId: profile.id,
+        barberId,
+        serviceId,
+        desiredDate: day,
+      });
+      hapticSuccess();
+      Alert.alert('Na lista!', 'Avisaremos a barbearia do seu interesse para este dia.');
+    } catch (e) {
+      hapticError();
+      Alert.alert('Não foi possível entrar na lista', toUserMessage(e));
+    }
+  }
+
+  async function onApplyPromo() {
+    if (!promoText.trim()) return;
+    try {
+      const r = await redeem.mutateAsync(promoText);
+      if (r) {
+        setPromo(r);
+        hapticSuccess();
+      } else {
+        setPromo(null);
+        Alert.alert('Cupom inválido', 'Verifique o código e tente novamente.');
+      }
+    } catch (e) {
+      Alert.alert('Não foi possível aplicar o cupom', toUserMessage(e));
+    }
+  }
+
   async function onConfirm() {
     if (!selected || !service || !profile) return;
     const end = new Date(selected.getTime() + service.duration_minutes * 60_000);
     try {
-      await book.mutateAsync({
+      const appointmentId = await book.mutateAsync({
         customerId: profile.id,
         barberId,
         serviceId,
         start: selected,
         end,
+        promoCodeId: promo?.promoId ?? null,
+        discountCents,
       });
+      // Best-effort local reminder; never block the booking on it.
+      scheduleReminder({
+        appointmentId,
+        startISO: selected.toISOString(),
+        title: 'Lembrete de agendamento',
+        body: `${service.name} às ${formatTime(selected.toISOString())} com ${barberQ.data?.name ?? 'seu barbeiro'}.`,
+      }).catch(() => {});
       hapticSuccess();
       Alert.alert('Agendado!', 'Sua solicitação de agendamento foi enviada.');
       router.replace('/appointments');
@@ -93,7 +163,43 @@ export default function BookScreen() {
           <ThemedText muted>
             {formatDuration(service.duration_minutes)} · {formatPrice(service.price_cents)}
           </ThemedText>
+          {service.deposit_cents > 0 ? (
+            <ThemedText type="caption" muted style={styles.deposit}>
+              Sinal de {formatPrice(service.deposit_cents)} para confirmar
+            </ThemedText>
+          ) : null}
+          {discountCents > 0 ? (
+            <ThemedText type="label" style={styles.deposit}>
+              Cupom aplicado: −{formatPrice(discountCents)} (total{' '}
+              {formatPrice(service.price_cents - discountCents)})
+            </ThemedText>
+          ) : null}
         </Card>
+
+        <View style={styles.section}>
+          <ThemedText type="label" muted>
+            CUPOM
+          </ThemedText>
+          <View style={styles.promoRow}>
+            <View style={styles.promoField}>
+              <TextField
+                value={promoText}
+                onChangeText={setPromoText}
+                placeholder="Código promocional"
+                autoCapitalize="characters"
+                autoCorrect={false}
+              />
+            </View>
+            <Button
+              title="Aplicar"
+              variant="secondary"
+              size="sm"
+              loading={redeem.isPending}
+              disabled={!promoText.trim()}
+              onPress={onApplyPromo}
+            />
+          </View>
+        </View>
 
         <View style={styles.section}>
           <ThemedText type="label" muted>
@@ -135,6 +241,14 @@ export default function BookScreen() {
               ))}
             </View>
           )}
+          {!dayApptsQ.isLoading && !hasAvailable ? (
+            <Button
+              title="Entrar na lista de espera"
+              variant="secondary"
+              loading={joinWaitlist.isPending}
+              onPress={onJoinWaitlist}
+            />
+          ) : null}
         </View>
       </ScrollView>
 
@@ -158,6 +272,17 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: Spacing.sm,
+  },
+  deposit: {
+    marginTop: Spacing.xs,
+  },
+  promoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: Spacing.sm,
+  },
+  promoField: {
+    flex: 1,
   },
   days: {
     gap: Spacing.sm,

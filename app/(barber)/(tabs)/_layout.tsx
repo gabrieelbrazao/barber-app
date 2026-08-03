@@ -46,6 +46,24 @@ export default function BarberTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="dashboard"
+        options={{
+          title: 'Painel',
+          // Owner-only analytics.
+          href: owner ? undefined : null,
+          tabBarIcon: ({ color, size }) => <Icon name="stats-chart" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="team"
+        options={{
+          title: 'Equipe',
+          // Only the shop owner approves staff.
+          href: owner ? undefined : null,
+          tabBarIcon: ({ color, size }) => <Icon name="people" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Perfil',

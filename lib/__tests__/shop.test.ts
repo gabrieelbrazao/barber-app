@@ -1,4 +1,4 @@
-import { isOwner, logoObjectPath, bannerObjectPath } from '@/lib/shop';
+import { isOwner, logoObjectPath, bannerObjectPath, portfolioObjectPath } from '@/lib/shop';
 
 describe('isOwner', () => {
   const shop = { owner_id: 'u1' };
@@ -21,5 +21,8 @@ describe('storage object paths', () => {
   });
   it('keys a banner under the shop folder', () => {
     expect(bannerObjectPath('shop1', 'b2')).toBe('shop1/banners/b2');
+  });
+  it('keys a portfolio image under the shop/barber folder', () => {
+    expect(portfolioObjectPath('shop1', 'barber9', 'k3')).toBe('shop1/barber9/k3');
   });
 });

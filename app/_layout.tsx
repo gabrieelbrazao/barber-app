@@ -16,9 +16,12 @@ import { BrandingProvider, useBranding } from '@/contexts/branding';
 import { SessionProvider, useSession } from '@/contexts/session';
 import { ThemeModeProvider, useThemeMode } from '@/contexts/theme-mode';
 import { useAppFonts } from '@/hooks/use-app-fonts';
+import { configureNotificationHandler } from '@/lib/notifications';
 import { queryClient } from '@/lib/query-client';
 
 SplashScreen.preventAutoHideAsync();
+// How reminders present while the app is foregrounded (banner + list, no sound).
+configureNotificationHandler();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useAppFonts();

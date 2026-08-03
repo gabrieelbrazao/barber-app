@@ -8,10 +8,14 @@ import { useSession } from '@/contexts/session';
 import { toUserMessage } from '@/lib/errors';
 import { maskPhoneBR } from '@/lib/format';
 import { hapticError, hapticSuccess } from '@/lib/haptics';
+import { loyaltyProgress } from '@/lib/loyalty';
+import { useCustomerLoyalty } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 
 export default function CustomerProfileScreen() {
   const { session, profile, signOut, refreshProfile } = useSession();
+  const loyaltyQ = useCustomerLoyalty(profile?.id ?? '');
+  const loyalty = loyaltyProgress(loyaltyQ.data ?? 0);
   const [fullName, setFullName] = useState(profile?.full_name ?? '');
   const [phone, setPhone] = useState(maskPhoneBR(profile?.phone ?? ''));
   const [saving, setSaving] = useState(false);
@@ -67,6 +71,15 @@ export default function CustomerProfileScreen() {
           </View>
         </Card>
 
+        <Card>
+          <ThemedText type="label">Fidelidade</ThemedText>
+          <ThemedText type="caption" muted style={styles.loyaltySub}>
+            {loyalty.rewardReady
+              ? 'Você ganhou um corte! Fale com a barbearia para resgatar.'
+              : `${loyalty.inCard} de ${loyalty.threshold} cortes — faltam ${loyalty.remaining} para um brinde.`}
+          </ThemedText>
+        </Card>
+
         <View style={styles.form}>
           <TextField label="Nome completo" value={fullName} onChangeText={setFullName} />
           <TextField
@@ -112,6 +125,9 @@ const styles = StyleSheet.create({
   identityText: {
     flex: 1,
     gap: 2,
+  },
+  loyaltySub: {
+    marginTop: Spacing.xs,
   },
   form: {
     gap: Spacing.lg,

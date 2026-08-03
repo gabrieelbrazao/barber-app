@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Alert, RefreshControl, SectionList, StyleSheet } from 'react-native';
+import { Alert, RefreshControl, SectionList, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import {
@@ -16,6 +16,7 @@ import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import type { AppointmentView } from '@/lib/queries';
 import { useCancelAppointment, useMyAppointments } from '@/lib/queries';
+import { cancelReminder } from '@/lib/notifications';
 import { useColors } from '@/hooks/use-colors';
 import { splitByTime } from '@/lib/appointments';
 
@@ -31,13 +32,32 @@ export default function CustomerAppointmentsScreen() {
   function onCancel(id: string) {
     Alert.alert('Cancelar agendamento?', 'Isso libera o horário.', [
       { text: 'Manter', style: 'cancel' },
-      { text: 'Cancelar', style: 'destructive', onPress: () => cancel.mutate(id) },
+      {
+        text: 'Cancelar',
+        style: 'destructive',
+        onPress: () => cancel.mutate(id, { onSuccess: () => cancelReminder(id) }),
+      },
     ]);
+  }
+
+  function goReview(item: AppointmentView) {
+    router.push({
+      pathname: '/review/[appointmentId]',
+      params: { appointmentId: item.id, barberId: item.barberId, barberName: item.partyName },
+    });
+  }
+
+  function goReschedule(item: AppointmentView) {
+    router.push({
+      pathname: '/reschedule/[appointmentId]',
+      params: { appointmentId: item.id, barberId: item.barberId },
+    });
   }
 
   function renderItem(item: AppointmentView) {
     const upcoming = new Date(item.startTime) > new Date();
     const cancellable = upcoming && (item.status === 'pending' || item.status === 'confirmed');
+    const reviewable = item.status === 'completed';
     return (
       <AppointmentCard
         serviceName={item.serviceName}
@@ -46,7 +66,12 @@ export default function CustomerAppointmentsScreen() {
         status={item.status}
         actions={
           cancellable ? (
-            <Button title="Cancelar" variant="ghost" size="sm" onPress={() => onCancel(item.id)} />
+            <View style={styles.actions}>
+              <Button title="Remarcar" variant="secondary" size="sm" onPress={() => goReschedule(item)} />
+              <Button title="Cancelar" variant="ghost" size="sm" onPress={() => onCancel(item.id)} />
+            </View>
+          ) : reviewable ? (
+            <Button title="Avaliar" variant="secondary" size="sm" onPress={() => goReview(item)} />
           ) : undefined
         }
       />
@@ -96,5 +121,9 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
   },
 });

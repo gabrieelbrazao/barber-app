@@ -40,6 +40,7 @@ const STATUS_LABEL: Record<AppointmentStatus, string> = {
   confirmed: 'Confirmado',
   cancelled: 'Cancelado',
   completed: 'Concluído',
+  no_show: 'Não compareceu',
 };
 
 export function StatusBadge({ status }: { status: AppointmentStatus }) {

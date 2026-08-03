@@ -16,7 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 import { supabase } from '@/lib/supabase';
 
-export { logoObjectPath, bannerObjectPath } from '@/lib/shop';
+export { logoObjectPath, bannerObjectPath, portfolioObjectPath } from '@/lib/shop';
 
 export type PickedImage = {
   base64: string;
@@ -55,7 +55,7 @@ export async function pickImage(): Promise<PickedImage | null> {
  * `upsert` so re-uploading a logo overwrites in place; cache-busted so it refreshes.
  */
 export async function uploadImage(input: {
-  bucket: 'branding' | 'banners';
+  bucket: 'branding' | 'banners' | 'portfolio';
   path: string;
   image: PickedImage;
 }): Promise<string> {

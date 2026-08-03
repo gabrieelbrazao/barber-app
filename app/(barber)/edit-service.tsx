@@ -25,10 +25,14 @@ export default function EditServiceScreen() {
   const [name, setName] = useState(existing?.name ?? '');
   const [price, setPrice] = useState(existing ? maskCurrency(String(existing.price_cents)) : '');
   const [duration, setDuration] = useState(existing ? String(existing.duration_minutes) : '');
+  const [deposit, setDeposit] = useState(
+    existing?.deposit_cents ? maskCurrency(String(existing.deposit_cents)) : ''
+  );
   const [active, setActive] = useState(existing?.active ?? true);
 
   // The masked value mirrors its digits as cents (e.g. "35,00" -> 3500).
   const priceCents = parseInt(price.replace(/\D/g, '') || '0', 10);
+  const depositCents = parseInt(deposit.replace(/\D/g, '') || '0', 10);
   const durationMinutes = parseInt(duration, 10);
   const valid = name.trim() && price.length > 0 && durationMinutes > 0;
 
@@ -40,6 +44,7 @@ export default function EditServiceScreen() {
         name: name.trim(),
         priceCents,
         durationMinutes,
+        depositCents,
         active,
       });
       hapticSuccess();
@@ -73,6 +78,14 @@ export default function EditServiceScreen() {
           keyboardType="number-pad"
           value={duration}
           onChangeText={setDuration}
+        />
+        <TextField
+          label="Sinal (opcional)"
+          placeholder="0,00"
+          keyboardType="number-pad"
+          value={deposit}
+          onChangeText={(t) => setDeposit(maskCurrency(t))}
+          left={<ThemedText muted>R$</ThemedText>}
         />
 
         <View style={styles.toggleRow}>

@@ -6,16 +6,25 @@ import {
   AppointmentCard,
   AppointmentListSkeleton,
   Button,
+  Card,
   EmptyState,
   ErrorState,
+  IconButton,
   Screen,
   ScreenHeader,
 } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 import { splitByTime } from '@/lib/appointments';
+import type { AppointmentStatus } from '@/lib/database.types';
+import { formatDate } from '@/lib/format';
 import type { AppointmentView } from '@/lib/queries';
-import { useBarberAppointments, useUpdateAppointmentStatus } from '@/lib/queries';
+import {
+  useBarberAppointments,
+  useBarberWaitlist,
+  useResolveWaitlist,
+  useUpdateAppointmentStatus,
+} from '@/lib/queries';
 import { useColors } from '@/hooks/use-colors';
 
 export default function BarberScheduleScreen() {
@@ -24,12 +33,13 @@ export default function BarberScheduleScreen() {
   const barberId = profile?.id ?? '';
   const { data, isLoading, isError, refetch, isRefetching } = useBarberAppointments(barberId);
   const update = useUpdateAppointmentStatus(barberId);
+  const waitlistQ = useBarberWaitlist(barberId);
+  const resolveWaitlist = useResolveWaitlist(barberId);
 
   const sections = useMemo(() => splitByTime(data ?? []), [data]);
 
   function actionsFor(a: AppointmentView) {
-    const set = (status: 'confirmed' | 'cancelled' | 'completed') =>
-      update.mutate({ id: a.id, status });
+    const set = (status: AppointmentStatus) => update.mutate({ id: a.id, status });
 
     if (a.status === 'pending') {
       return (
@@ -43,6 +53,7 @@ export default function BarberScheduleScreen() {
       return (
         <>
           <Button title="Concluir" size="sm" variant="secondary" onPress={() => set('completed')} />
+          <Button title="Faltou" size="sm" variant="ghost" onPress={() => set('no_show')} />
           <Button title="Cancelar" size="sm" variant="ghost" onPress={() => set('cancelled')} />
         </>
       );
@@ -60,7 +71,34 @@ export default function BarberScheduleScreen() {
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={c.accent} />
         }
-        ListHeaderComponent={<ScreenHeader title="Agenda" subtitle="Seus próximos agendamentos" />}
+        ListHeaderComponent={
+          <>
+            <ScreenHeader title="Agenda" subtitle="Seus próximos agendamentos" />
+            {(waitlistQ.data?.length ?? 0) > 0 ? (
+              <Card>
+                <ThemedText type="label" style={styles.waitlistTitle}>
+                  Lista de espera
+                </ThemedText>
+                {waitlistQ.data!.map((w) => (
+                  <View key={w.id} style={styles.waitlistRow}>
+                    <View style={styles.flex}>
+                      <ThemedText type="label">{w.customerName}</ThemedText>
+                      <ThemedText type="caption" muted>
+                        {w.serviceName} · {formatDate(w.desiredDate)}
+                      </ThemedText>
+                    </View>
+                    <IconButton
+                      name="checkmark-circle-outline"
+                      color={c.confirmed}
+                      accessibilityLabel="Resolver da lista de espera"
+                      onPress={() => resolveWaitlist.mutate(w.id)}
+                    />
+                  </View>
+                ))}
+              </Card>
+            ) : null}
+          </>
+        }
         renderSectionHeader={({ section }) => (
           <ThemedText type="label" muted style={styles.sectionHeader}>
             {section.title}
@@ -110,5 +148,15 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: Spacing.sm,
+  },
+  flex: { flex: 1 },
+  waitlistTitle: {
+    marginBottom: Spacing.sm,
+  },
+  waitlistRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
 });
