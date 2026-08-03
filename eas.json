@@ -1,0 +1,58 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "base": {
+      "node": "20.18.0",
+      "env": {
+        "CLIENT_NAME": "Barbearia",
+        "CLIENT_SLUG": "barber-app",
+        "CLIENT_SCHEME": "barberapp",
+        "CLIENT_IOS_BUNDLE": "com.barberapp.demo",
+        "CLIENT_ANDROID_PACKAGE": "com.barberapp.demo"
+      }
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "environment": "development",
+      "channel": "development",
+      "ios": { "simulator": true },
+      "android": { "buildType": "apk" }
+    },
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "environment": "preview",
+      "channel": "preview",
+      "android": { "buildType": "apk" }
+    },
+    "production": {
+      "extends": "base",
+      "distribution": "store",
+      "environment": "production",
+      "channel": "production",
+      "autoIncrement": true,
+      "android": { "buildType": "app-bundle" }
+    },
+    "client-sharp-edge": {
+      "extends": "production",
+      "env": {
+        "CLIENT_NAME": "The Sharp Edge",
+        "CLIENT_SLUG": "sharp-edge",
+        "CLIENT_SCHEME": "sharpedge",
+        "CLIENT_ICON": "./assets/clients/sharp-edge/icon.png",
+        "CLIENT_SPLASH": "./assets/clients/sharp-edge/splash-icon.png",
+        "CLIENT_IOS_BUNDLE": "com.sharpedge.app",
+        "CLIENT_ANDROID_PACKAGE": "com.sharpedge.app",
+        "EXPO_PUBLIC_SHOP_ID": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
