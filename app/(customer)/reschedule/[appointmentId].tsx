@@ -77,7 +77,13 @@ export default function RescheduleScreen() {
 
   if (barberQ.isLoading || durationQ.isLoading) return <Screen><Loading /></Screen>;
   if (barberQ.isError || !durationQ.data)
-    return <Screen><ErrorState message="Não foi possível carregar este agendamento." /></Screen>;
+    return <Screen><ErrorState
+        message="Não foi possível carregar este agendamento."
+        onRetry={() => {
+          barberQ.refetch();
+          durationQ.refetch();
+        }}
+      /></Screen>;
 
   async function onConfirm() {
     if (!selected || !profile || !durationQ.data) return;

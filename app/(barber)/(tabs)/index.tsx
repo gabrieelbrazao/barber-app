@@ -120,7 +120,7 @@ export default function BarberScheduleScreen() {
           isLoading ? (
             <AppointmentListSkeleton />
           ) : isError ? (
-            <ErrorState message="Não foi possível carregar sua agenda." />
+            <ErrorState message="Não foi possível carregar sua agenda." onRetry={() => refetch()} />
           ) : (
             <EmptyState
               icon="calendar-outline"

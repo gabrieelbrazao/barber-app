@@ -28,7 +28,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
 export default function DashboardScreen() {
   const [days, setDays] = useState(30);
   const range = useMemo(() => lastNDays(days), [days]);
-  const { data, isLoading, isError } = useShopAnalytics(range);
+  const { data, isLoading, isError, refetch } = useShopAnalytics(range);
 
   return (
     <Screen>
@@ -44,7 +44,7 @@ export default function DashboardScreen() {
         {isLoading ? (
           <Loading />
         ) : isError || !data ? (
-          <ErrorState message="Não foi possível carregar o painel." />
+          <ErrorState message="Não foi possível carregar o painel." onRetry={() => refetch()} />
         ) : (
           <>
             <View style={styles.kpiRow}>

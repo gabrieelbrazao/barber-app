@@ -2,6 +2,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
+import { Button } from '@/components/ui/button';
 import { Spacing } from '@/constants/theme';
 import { useColors } from '@/hooks/use-colors';
 
@@ -29,10 +30,13 @@ export function Loading() {
   );
 }
 
-export function ErrorState({ message }: { message?: string }) {
+export function ErrorState({ message, onRetry }: { message?: string; onRetry?: () => void }) {
   return (
     <View style={styles.center}>
-      <ThemedText muted>{message ?? 'Algo deu errado.'}</ThemedText>
+      <ThemedText muted style={styles.errorText}>
+        {message ?? 'Algo deu errado.'}
+      </ThemedText>
+      {onRetry ? <Button title="Tentar novamente" variant="ghost" onPress={onRetry} /> : null}
     </View>
   );
 }
@@ -43,6 +47,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: Spacing.md,
     padding: Spacing.xl,
+  },
+  errorText: {
+    textAlign: 'center',
   },
 });

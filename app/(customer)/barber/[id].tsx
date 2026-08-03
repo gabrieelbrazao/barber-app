@@ -36,7 +36,7 @@ export default function BarberDetailScreen() {
 
   if (barberQ.isLoading) return <Screen><Loading /></Screen>;
   if (barberQ.isError || !barberQ.data)
-    return <Screen><ErrorState message="Não foi possível carregar este barbeiro." /></Screen>;
+    return <Screen><ErrorState message="Não foi possível carregar este barbeiro." onRetry={() => barberQ.refetch()} /></Screen>;
 
   const barber = barberQ.data;
 

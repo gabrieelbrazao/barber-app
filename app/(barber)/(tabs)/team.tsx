@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import {
@@ -20,7 +20,7 @@ import { useSetStaffApproval, useShopStaff, type StaffMember } from '@/lib/queri
 export default function TeamScreen() {
   const c = useColors();
   const { profile } = useSession();
-  const { data, isLoading, isError } = useShopStaff();
+  const { data, isLoading, isError, refetch } = useShopStaff();
   const setApproval = useSetStaffApproval();
 
   function onToggle(member: StaffMember) {
@@ -32,10 +32,10 @@ export default function TeamScreen() {
 
   return (
     <Screen>
-      <ScreenHeader title="Equipe" subtitle="Aprove quem pode atender nesta barbearia" />
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <ScreenHeader title="Equipe" subtitle="Aprove quem pode atender nesta barbearia" />
         {isLoading ? null : isError ? (
-          <ErrorState message="Não foi possível carregar a equipe." />
+          <ErrorState message="Não foi possível carregar a equipe." onRetry={() => refetch()} />
         ) : (data?.length ?? 0) === 0 ? (
           <EmptyState icon="people-outline" title="Nenhum membro ainda" />
         ) : (
@@ -76,7 +76,7 @@ export default function TeamScreen() {
             );
           })
         )}
-      </View>
+      </ScrollView>
     </Screen>
   );
 }

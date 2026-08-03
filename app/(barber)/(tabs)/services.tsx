@@ -84,7 +84,7 @@ export default function BarberServicesScreen() {
           isLoading ? (
             <ServiceListSkeleton />
           ) : isError ? (
-            <ErrorState message="Não foi possível carregar seus serviços." />
+            <ErrorState message="Não foi possível carregar seus serviços." onRetry={() => refetch()} />
           ) : (
             <EmptyState icon="pricetags-outline" title="Nenhum serviço ainda" message="Adicione seu primeiro serviço.">
               <Button title="Adicionar serviço" onPress={() => router.push('/edit-service')} />

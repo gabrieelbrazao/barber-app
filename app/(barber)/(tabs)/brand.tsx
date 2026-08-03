@@ -171,7 +171,7 @@ export default function BrandScreen() {
 
   if (shopQ.isLoading) return <Screen><Loading /></Screen>;
   if (shopQ.isError || !shopQ.data)
-    return <Screen><ErrorState message="Não foi possível carregar a barbearia." /></Screen>;
+    return <Screen><ErrorState message="Não foi possível carregar a barbearia." onRetry={() => shopQ.refetch()} /></Screen>;
 
   const shop = shopQ.data;
   const cols = colors ?? {};

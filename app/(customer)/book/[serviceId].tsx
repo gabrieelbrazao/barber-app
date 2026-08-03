@@ -93,7 +93,13 @@ export default function BookScreen() {
 
   if (barberQ.isLoading || servicesQ.isLoading) return <Screen><Loading /></Screen>;
   if (barberQ.isError || !service)
-    return <Screen><ErrorState message="Não foi possível carregar os detalhes do agendamento." /></Screen>;
+    return <Screen><ErrorState
+        message="Não foi possível carregar os detalhes do agendamento."
+        onRetry={() => {
+          barberQ.refetch();
+          servicesQ.refetch();
+        }}
+      /></Screen>;
 
   const discountCents =
     service && promo ? promoDiscountCents(service.price_cents, promo.kind, promo.value) : 0;

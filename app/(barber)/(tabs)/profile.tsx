@@ -87,7 +87,7 @@ export default function BarberProfileScreen() {
   }
 
   if (barberQ.isLoading) return <Screen><Loading /></Screen>;
-  if (barberQ.isError) return <Screen><ErrorState message="Não foi possível carregar seu perfil." /></Screen>;
+  if (barberQ.isError) return <Screen><ErrorState message="Não foi possível carregar seu perfil." onRetry={() => barberQ.refetch()} /></Screen>;
 
   const saved = barberQ.data;
   const dirty =

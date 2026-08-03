@@ -99,7 +99,7 @@ export default function CustomerAppointmentsScreen() {
           isLoading ? (
             <AppointmentListSkeleton />
           ) : isError ? (
-            <ErrorState message="Não foi possível carregar seus agendamentos." />
+            <ErrorState message="Não foi possível carregar seus agendamentos." onRetry={() => refetch()} />
           ) : (
             <EmptyState icon="calendar-outline" title="Nenhum agendamento ainda" message="Agende seu primeiro corte para vê-lo aqui.">
               <Button title="Encontrar um barbeiro" onPress={() => router.push('/')} />

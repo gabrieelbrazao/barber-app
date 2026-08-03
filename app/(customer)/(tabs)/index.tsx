@@ -67,7 +67,7 @@ export default function ShopHomeScreen() {
           isLoading ? (
             <BarberListSkeleton />
           ) : isError ? (
-            <ErrorState message="Não foi possível carregar os profissionais." />
+            <ErrorState message="Não foi possível carregar os profissionais." onRetry={() => refetch()} />
           ) : (
             <EmptyState
               icon="cut-outline"
