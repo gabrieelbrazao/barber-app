@@ -16,3 +16,12 @@ if (!shopId) {
 }
 
 export const SHOP_ID: string = shopId;
+
+/**
+ * Deposits are opt-in per build: without a publishable key the app still shows
+ * and records the deposit, it just never opens the payment sheet.
+ */
+export const STRIPE_PUBLISHABLE_KEY: string | null =
+  process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || null;
+
+export const DEPOSITS_ENABLED = STRIPE_PUBLISHABLE_KEY !== null;

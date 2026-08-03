@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
+import { useStripe } from '@/lib/stripe';
 import { ThemedText } from '@/components/themed-text';
 import {
   Button,
@@ -16,12 +17,15 @@ import {
   TextField,
 } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
+import { useBranding } from '@/contexts/branding';
 import { useSession } from '@/contexts/session';
 import { generateSlots } from '@/lib/availability';
+import { DEPOSITS_ENABLED } from '@/lib/config';
 import { toUserMessage } from '@/lib/errors';
 import { formatDuration, formatPrice, formatTime } from '@/lib/format';
 import { hapticError, hapticSuccess } from '@/lib/haptics';
 import { scheduleReminder } from '@/lib/notifications';
+import { collectDeposit } from '@/lib/payments';
 import {
   useBarber,
   useBookAppointment,
@@ -56,6 +60,9 @@ export default function BookScreen() {
   const router = useRouter();
   const { serviceId, barberId } = useLocalSearchParams<{ serviceId: string; barberId: string }>();
   const { profile } = useSession();
+  const branding = useBranding();
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const [paying, setPaying] = useState(false);
 
   const days = useMemo(() => nextDays(DAYS_AHEAD), []);
   const [day, setDay] = useState<Date>(days[0]);
@@ -147,7 +154,27 @@ export default function BookScreen() {
         body: `${service.name} às ${formatTime(selected.toISOString())} com ${barberQ.data?.name ?? 'seu barbeiro'}.`,
       }).catch(() => {});
       hapticSuccess();
-      Alert.alert('Agendado!', 'Sua solicitação de agendamento foi enviada.');
+
+      // The appointment already exists at this point, so a failed or dismissed
+      // deposit never unbooks it — it just stays unpaid for the shop to chase.
+      let depositNote = '';
+      if (DEPOSITS_ENABLED && service.deposit_cents > 0) {
+        setPaying(true);
+        try {
+          const outcome = await collectDeposit(
+            { initPaymentSheet, presentPaymentSheet },
+            appointmentId,
+            branding.name ?? 'Barbearia'
+          );
+          depositNote = outcome === 'paid' ? ' Sinal pago.' : ' O sinal ainda não foi pago.';
+        } catch (e) {
+          depositNote = ` ${toUserMessage(e, 'O sinal não pôde ser cobrado agora.')}`;
+        } finally {
+          setPaying(false);
+        }
+      }
+
+      Alert.alert('Agendado!', `Sua solicitação de agendamento foi enviada.${depositNote}`);
       router.replace('/appointments');
     } catch (e) {
       hapticError();
@@ -257,7 +284,7 @@ export default function BookScreen() {
           title={selected ? `Confirmar ${formatTime(selected.toISOString())}` : 'Selecione um horário'}
           fullWidth
           disabled={!selected}
-          loading={book.isPending}
+          loading={book.isPending || paying}
           onPress={onConfirm}
         />
       </View>

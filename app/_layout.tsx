@@ -1,21 +1,24 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { Stack, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import * as SystemUI from 'expo-system-ui';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button, Screen } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
+import { StripeProvider } from '@/lib/stripe';
+import { Colors, Radius, Spacing } from '@/constants/theme';
 import { BrandingProvider, useBranding } from '@/contexts/branding';
 import { SessionProvider, useSession } from '@/contexts/session';
 import { ThemeModeProvider, useThemeMode } from '@/contexts/theme-mode';
 import { useAppFonts } from '@/hooks/use-app-fonts';
+import { STRIPE_PUBLISHABLE_KEY } from '@/lib/config';
 import { configureNotificationHandler } from '@/lib/notifications';
 import { queryClient } from '@/lib/query-client';
 
@@ -39,7 +42,9 @@ export default function RootLayout() {
           <ThemeModeProvider>
             <BrandingProvider>
               <SessionProvider>
-                <RootNavigator />
+                <Payments>
+                  <RootNavigator />
+                </Payments>
               </SessionProvider>
             </BrandingProvider>
           </ThemeModeProvider>
@@ -47,6 +52,12 @@ export default function RootLayout() {
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
+}
+
+/** Deposits are opt-in per build — skip Stripe entirely when no key is configured. */
+function Payments({ children }: { children: React.ReactElement }) {
+  if (!STRIPE_PUBLISHABLE_KEY) return children;
+  return <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>{children}</StripeProvider>;
 }
 
 function RootNavigator() {
