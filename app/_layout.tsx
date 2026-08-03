@@ -26,6 +26,14 @@ SplashScreen.preventAutoHideAsync();
 // How reminders present while the app is foregrounded (banner + list, no sound).
 configureNotificationHandler();
 
+/**
+ * Hard ceiling on the splash. Auth refresh and the branding fetch both hit the
+ * network, and a hung request would otherwise leave the user staring at the
+ * splash forever — after this we render with whatever resolved (default palette,
+ * signed-out) and let the providers flip the UI when they catch up.
+ */
+const SPLASH_TIMEOUT_MS = 6000;
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useAppFonts();
 
@@ -67,18 +75,35 @@ function RootNavigator() {
 
   // Hold the splash until auth + profile, branding, AND the saved theme choice
   // resolve, so guards settle and the themed palette is ready before first paint.
-  const ready = !loading && branding.ready && themeReady;
+  const resolved = !loading && branding.ready && themeReady;
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (resolved) return;
+    const id = setTimeout(() => setTimedOut(true), SPLASH_TIMEOUT_MS);
+    return () => clearTimeout(id);
+  }, [resolved]);
+
+  const ready = resolved || timedOut;
+
   useEffect(() => {
     if (ready) {
       SplashScreen.hideAsync();
     }
   }, [ready]);
 
+  const palette = branding.palette[scheme];
+
+  // Paint the window behind the navigator so scheme changes and the gap between
+  // splash and first frame don't flash white.
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(palette.background);
+  }, [palette.background]);
+
   if (!ready) {
     return null;
   }
 
-  const palette = branding.palette[scheme];
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
   const navTheme = {
     ...base,
