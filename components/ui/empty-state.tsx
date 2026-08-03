@@ -25,7 +25,7 @@ export function EmptyState({ icon, title, message, children }: EmptyStateProps) 
           {message}
         </ThemedText>
       ) : null}
-      {children}
+      {children ? <View style={styles.actions}>{children}</View> : null}
     </View>
   );
 }
@@ -44,5 +44,13 @@ const styles = StyleSheet.create({
   },
   message: {
     textAlign: 'center',
+  },
+  // alignSelf:center shrink-wraps the row to its content, so a child Button
+  // (which forces alignSelf:flex-start) still ends up centered in the column.
+  actions: {
+    alignSelf: 'center',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
   },
 });
