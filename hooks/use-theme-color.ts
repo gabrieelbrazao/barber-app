@@ -9,10 +9,8 @@ import type { ColorName } from '@/constants/theme';
 
 export function useThemeColor(props: { light?: string; dark?: string }, colorName: ColorName) {
   const { scheme } = useThemeMode();
+  const { palette } = useBranding();
   const colorFromProps = props[scheme];
 
-  if (colorFromProps) {
-    return colorFromProps;
-  }
-  return useBranding().palette[scheme][colorName];
+  return colorFromProps ?? palette[scheme][colorName];
 }
