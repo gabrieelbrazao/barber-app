@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, Loading, Screen, StarInput, TextField } from '@/components/ui';
@@ -49,7 +49,10 @@ export default function ReviewScreen() {
 
   return (
     <Screen edges={['bottom']}>
-      <View style={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior="padding">
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {existing ? (
           <Card>
             <ThemedText type="subtitle">Você já avaliou</ThemedText>
@@ -82,12 +85,14 @@ export default function ReviewScreen() {
             />
           </>
         )}
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   content: {
     padding: Spacing.lg,
     gap: Spacing.lg,
