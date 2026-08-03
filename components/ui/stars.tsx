@@ -16,7 +16,10 @@ export function Stars({ rating, count, size = 14 }: StarsProps) {
   const rounded = Math.round(rating * 2) / 2;
 
   return (
-    <View style={styles.row}>
+    <View
+      style={styles.row}
+      accessible
+      accessibilityLabel={`${rounded} de 5${count != null ? `, ${count} avaliações` : ''}`}>
       {[1, 2, 3, 4, 5].map((i) => {
         const name = rounded >= i ? 'star' : rounded >= i - 0.5 ? 'star-half' : 'star-outline';
         return <Icon key={i} name={name} size={size} color={c.accent} />;

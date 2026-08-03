@@ -20,7 +20,14 @@ export type BarberCardProps = {
 export function BarberCard({ name, title, avatarUrl, rating, reviewCount, onPress }: BarberCardProps) {
   const c = useColors();
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}>
+    <Pressable
+      onPress={onPress}
+      accessible
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={[name, title, rating != null ? `${rating.toFixed(1)} de 5` : null]
+        .filter(Boolean)
+        .join(', ')}
+      style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}>
       <Card>
         <View style={styles.row}>
           <Avatar name={name} uri={avatarUrl} size={56} />

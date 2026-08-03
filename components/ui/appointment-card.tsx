@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
-import { StatusBadge } from '@/components/ui/badge';
+import { STATUS_LABEL, StatusBadge } from '@/components/ui/badge';
 import { Spacing } from '@/constants/theme';
 import type { AppointmentStatus } from '@/lib/database.types';
 import { formatDate, formatTime } from '@/lib/format';
@@ -27,26 +27,31 @@ export function AppointmentCard({
   actions,
 }: AppointmentCardProps) {
   const c = useColors();
+  // Read the whole summary as one item; `actions` stays outside so its buttons
+  // remain individually focusable.
+  const label = `${serviceName}, ${partyName}, ${formatDate(startTime)} às ${formatTime(startTime)}, ${STATUS_LABEL[status]}`;
   return (
     <Card>
-      <View style={styles.header}>
-        <ThemedText type="subtitle" style={styles.flex}>
-          {serviceName}
-        </ThemedText>
-        <StatusBadge status={status} />
-      </View>
+      <View accessible accessibilityLabel={label}>
+        <View style={styles.header}>
+          <ThemedText type="subtitle" style={styles.flex}>
+            {serviceName}
+          </ThemedText>
+          <StatusBadge status={status} />
+        </View>
 
-      <View style={styles.metaRow}>
-        <Icon name="person-outline" size={14} color={c.textMuted} />
-        <ThemedText type="caption" muted>
-          {partyName}
-        </ThemedText>
-      </View>
-      <View style={styles.metaRow}>
-        <Icon name="calendar-outline" size={14} color={c.textMuted} />
-        <ThemedText type="caption" muted>
-          {formatDate(startTime)} · {formatTime(startTime)}
-        </ThemedText>
+        <View style={styles.metaRow}>
+          <Icon name="person-outline" size={14} color={c.textMuted} />
+          <ThemedText type="caption" muted>
+            {partyName}
+          </ThemedText>
+        </View>
+        <View style={styles.metaRow}>
+          <Icon name="calendar-outline" size={14} color={c.textMuted} />
+          <ThemedText type="caption" muted>
+            {formatDate(startTime)} · {formatTime(startTime)}
+          </ThemedText>
+        </View>
       </View>
 
       {actions ? <View style={styles.actions}>{actions}</View> : null}

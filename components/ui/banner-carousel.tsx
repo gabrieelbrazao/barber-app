@@ -24,7 +24,11 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
       decelerationRate="fast"
       contentContainerStyle={styles.content}
       renderItem={({ item }) => (
-        <View style={[styles.card, { backgroundColor: c.surfaceAlt }]}>
+        <View
+          style={[styles.card, { backgroundColor: c.surfaceAlt }]}
+          accessible
+          accessibilityRole="image"
+          accessibilityLabel={item.title ?? 'Promoção'}>
           <Image source={{ uri: item.image_url }} style={styles.image} contentFit="cover" />
           {item.title ? (
             <View style={[styles.caption, { backgroundColor: c.surface }]}>

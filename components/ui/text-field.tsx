@@ -34,6 +34,10 @@ export function TextField({ label, error, left, right, style, onFocus, onBlur, .
         ]}>
         {left}
         <TextInput
+          accessibilityLabel={label}
+          // The label is a sibling Text, so screen readers can't associate it
+          // with the input on their own — carry the error in the hint instead.
+          accessibilityHint={error}
           placeholderTextColor={c.textMuted}
           style={[styles.input, { color: c.text }, style]}
           onFocus={(e) => {

@@ -35,7 +35,7 @@ export function Badge({ label, color }: BadgeProps) {
   );
 }
 
-const STATUS_LABEL: Record<AppointmentStatus, string> = {
+export const STATUS_LABEL: Record<AppointmentStatus, string> = {
   pending: 'Pendente',
   confirmed: 'Confirmado',
   cancelled: 'Cancelado',

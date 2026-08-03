@@ -31,7 +31,10 @@ export function ServiceCard({
   return (
     <Card style={dimmed ? { opacity: 0.6 } : undefined}>
       <View style={styles.row}>
-        <View style={styles.info}>
+        <View
+          style={styles.info}
+          accessible
+          accessibilityLabel={`${name}, ${formatDuration(durationMinutes)}, ${formatPrice(priceCents)}`}>
           <ThemedText type="defaultSemiBold">{name}</ThemedText>
           <View style={styles.meta}>
             <Icon name="time-outline" size={14} color={c.textMuted} />
@@ -46,7 +49,16 @@ export function ServiceCard({
             </ThemedText>
           </View>
         </View>
-        {onBook ? <Button title="Agendar" size="sm" onPress={onBook} /> : actions}
+        {onBook ? (
+          <Button
+            title="Agendar"
+            size="sm"
+            onPress={onBook}
+            accessibilityLabel={`Agendar ${name}`}
+          />
+        ) : (
+          actions
+        )}
       </View>
     </Card>
   );
