@@ -62,13 +62,16 @@ update public.shops
   set owner_id = '11111111-1111-1111-1111-111111111111'
 where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
--- Enrich the barber_profiles the trigger created.
+-- Enrich the barber_profiles the trigger created. New staff default to
+-- approved = false, which would leave the demo shop with no bookable barbers.
 update public.barber_profiles set
-  bio = 'Master barber, 12 years on the chair. Specializing in skin fades and classic scissor work.'
+  bio = 'Master barber, 12 years on the chair. Specializing in skin fades and classic scissor work.',
+  approved = true
 where id = '11111111-1111-1111-1111-111111111111';
 
 update public.barber_profiles set
-  bio = 'Old-school hot-towel shaves and timeless cuts. Family shop since 1998.'
+  bio = 'Old-school hot-towel shaves and timeless cuts. Family shop since 1998.',
+  approved = true
 where id = '22222222-2222-2222-2222-222222222222';
 
 -- Services (scoped to the shop).
