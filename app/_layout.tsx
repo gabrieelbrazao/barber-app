@@ -134,15 +134,19 @@ function RootNavigator() {
 
   return (
     <ThemeProvider value={navTheme}>
+      {/* Each group repeats headerShown: false. Inherited screenOptions leave the
+          option undefined on the descriptor, and native-stack reads that as
+          "parent header shown", which zeroes the top inset of every nested
+          stack's header — its title then draws under the status bar. */}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Protected guard={!session}>
-          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         </Stack.Protected>
         <Stack.Protected guard={isCustomer}>
-          <Stack.Screen name="(customer)" />
+          <Stack.Screen name="(customer)" options={{ headerShown: false }} />
         </Stack.Protected>
         <Stack.Protected guard={isBarber}>
-          <Stack.Screen name="(barber)" />
+          <Stack.Screen name="(barber)" options={{ headerShown: false }} />
         </Stack.Protected>
         {/* Dev-only component gallery — never ship it as a reachable production route. */}
         <Stack.Protected guard={__DEV__}>
