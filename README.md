@@ -1,8 +1,20 @@
 # Barber App (white-label)
 
+[![CI](https://github.com/gabrieelbrazao/barber-app/actions/workflows/ci.yml/badge.svg)](https://github.com/gabrieelbrazao/barber-app/actions/workflows/ci.yml)
+[![Expo SDK 54](https://img.shields.io/badge/Expo%20SDK-54-000020?logo=expo&logoColor=white)](https://docs.expo.dev/versions/v54.0.0/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-A17F1A.svg)](LICENSE)
+
 A **white-label**, two-sided barber booking app built with Expo (SDK 54) + Supabase.
 Each client build is **one barbershop**: customers enter directly into that shop, pick a
 staff barber, and book — there is no cross-shop catalog.
+
+| Customer home | Booking | Appointments |
+| --- | --- | --- |
+| ![Customer home](docs/screenshots/customer-home.png) | ![Booking a slot](docs/screenshots/booking.png) | ![Appointments](docs/screenshots/appointments.png) |
+
+| Barber schedule | Owner branding | Dark theme |
+| --- | --- | --- |
+| ![Barber schedule](docs/screenshots/barber-agenda.png) | ![Branding editor](docs/screenshots/branding.png) | ![Dark theme](docs/screenshots/dark-mode.png) |
 
 - **Customers** see the shop's branding + promo banners, pick a barber, view services + ratings + portfolio, book open slots (applying a promo code), reschedule/cancel, get a local reminder before the appointment, review completed visits, track loyalty progress, and join a waitlist when a day is full.
 - **Barbers (staff)** manage their service catalog (incl. an optional deposit), working hours, one-off time-off blocks, and profile/portfolio; confirm/complete/mark-no-show incoming appointments; and see their waitlist.
