@@ -191,6 +191,7 @@ export default function BarberProfileScreen() {
                     value={isOpen}
                     onValueChange={(v) => setDayOpen(key, v)}
                     trackColor={{ true: c.accent, false: c.border }}
+                    thumbColor={isOpen ? c.surface : c.textMuted}
                   />
                   <ThemedText type="label">{label}</ThemedText>
                 </View>

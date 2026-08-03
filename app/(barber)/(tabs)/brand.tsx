@@ -433,6 +433,7 @@ function BannersManager({ banners, loading }: { banners: Banner[]; loading: bool
                   value={b.active}
                   onValueChange={() => onToggle(b)}
                   trackColor={{ true: c.accent, false: c.border }}
+                  thumbColor={b.active ? c.surface : c.textMuted}
                 />
                 <ThemedText type="caption" muted>
                   {b.active ? 'Ativo' : 'Oculto'}
@@ -533,6 +534,7 @@ function PromoManager() {
                     save.mutate({ id: p.id, code: p.code, kind: p.kind, value: p.value, active })
                   }
                   trackColor={{ true: c.accent, false: c.border }}
+                  thumbColor={p.active ? c.surface : c.textMuted}
                 />
                 <IconButton
                   name="trash-outline"

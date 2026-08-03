@@ -99,6 +99,7 @@ export default function EditServiceScreen() {
             value={active}
             onValueChange={setActive}
             trackColor={{ true: c.accent, false: c.border }}
+            thumbColor={active ? c.surface : c.textMuted}
           />
         </View>
 
