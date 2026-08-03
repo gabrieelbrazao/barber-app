@@ -63,5 +63,10 @@
     "test-renderer": "^1.2.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "reanimated-color-picker": {
+      "expo": "$expo"
+    }
+  }
 }
