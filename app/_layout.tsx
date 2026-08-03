@@ -144,6 +144,35 @@ function ProfileUnavailable() {
   );
 }
 
+/**
+ * Last-resort boundary: a throw anywhere under the root layout replaces the
+ * providers themselves, so this cannot use the branding/theme contexts or the
+ * UI kit — it styles straight off the static tokens.
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const c = Colors[scheme];
+  return (
+    <View style={[styles.center, { backgroundColor: c.background }]}>
+      <Text style={[styles.fallbackTitle, { color: c.text }]}>Algo deu errado</Text>
+      <Text style={[styles.centerText, { color: c.textMuted }]}>
+        O app encontrou um erro inesperado. Tente novamente.
+      </Text>
+      {__DEV__ ? (
+        <Text style={[styles.centerText, styles.fallbackDetail, { color: c.textMuted }]}>
+          {error.message}
+        </Text>
+      ) : null}
+      <Pressable
+        accessibilityRole="button"
+        onPress={retry}
+        style={[styles.fallbackButton, { backgroundColor: c.accent }]}>
+        <Text style={[styles.fallbackButtonText, { color: c.onAccent }]}>Tentar novamente</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   center: {
     flex: 1,
@@ -154,5 +183,21 @@ const styles = StyleSheet.create({
   },
   centerText: {
     textAlign: 'center',
+  },
+  // No custom family here: the boundary can fire before the fonts resolve.
+  fallbackTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  fallbackDetail: {
+    fontSize: 12,
+  },
+  fallbackButton: {
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.pill,
+  },
+  fallbackButtonText: {
+    fontWeight: '600',
   },
 });
